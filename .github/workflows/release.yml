@@ -152,7 +152,11 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.seed_example_data }}
         run: |
           password="$(openssl rand -base64 48)"
-          kamal app exec -d "$DB_PROVIDER" --no-reuse --no-interactive --version=latest \
-            --env ALLOW_EXAMPLE_DATA_SEEDING:true \
-            --env "EXAMPLE_DATA_PASSWORD:$password" \
-            "--AppTasks=seed-example-data"
+          log="$RUNNER_TEMP/seed-example-data.log"
+          if ! kamal app exec -d "$DB_PROVIDER" --no-reuse --no-interactive --version=latest \
+              --env "EXAMPLE_DATA_PASSWORD:$password" \
+              "--AppTasks=seed-example-data" > "$log" 2>&1; then
+            grep -E 'ERROR:|Exception:|InvalidOperationException' "$log" || true
+            exit 1
+          fi
+          grep -E 'Created a SQLite backup|Example fixtures' "$log"

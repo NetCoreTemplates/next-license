@@ -65,10 +65,10 @@ public class ConfigureDbMigrations : IHostingStartup
             AppTasks.Register("seed-example-data", _ => {
                 var services = appHost.GetApplicationServices();
                 if (!services.GetRequiredService<IHostEnvironment>().IsDevelopment()
-                    && (!string.Equals(Environment.GetEnvironmentVariable("ALLOW_EXAMPLE_DATA_SEEDING"), "true", StringComparison.OrdinalIgnoreCase)
+                    && (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("EXAMPLE_DATA_PASSWORD"))
                         || ConfigureDb.NormalizeProvider(services.GetRequiredService<IConfiguration>()["Database:Provider"]) != "sqlite"
                         || !string.IsNullOrWhiteSpace(services.GetRequiredService<LicenseStripeConfig>().SecretKey)))
-                    throw new InvalidOperationException("Production example data requires an explicit one-time flag, SQLite, and disabled Stripe checkout.");
+                    throw new InvalidOperationException("Production example data requires a one-time generated password, SQLite, and disabled Stripe checkout.");
                 RunMigrations();
                 ExampleDataSeeder.Seed(appHost);
             });
