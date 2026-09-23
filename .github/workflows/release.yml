@@ -25,9 +25,37 @@ env:
   MSSQL_PID: ${{ vars.MSSQL_PID || 'Express' }}
 
 jobs:
-  release:
+  preflight:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    outputs:
+      configured: ${{ steps.check.outputs.configured }}
+    steps:
+      - name: Check deployment secrets
+        id: check
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          missing=()
+          for name in SSH_PRIVATE_KEY KAMAL_DEPLOY_IP KAMAL_DEPLOY_HOST APPSETTINGS_JSON; do
+            if [ -z "${!name}" ]; then missing+=("$name"); fi
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+              echo "::error::Missing deployment secrets: ${missing[*]}"
+              exit 1
+            fi
+            echo "::notice::Skipping automatic deployment; missing secrets: ${missing[*]}"
+            echo "Deployment skipped. Configure these Actions secrets to enable it: ${missing[*]}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  release:
+    needs: preflight
+    runs-on: ubuntu-latest
+    if: ${{ needs.preflight.outputs.configured == 'true' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
