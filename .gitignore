@@ -1,6 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dotnet
+PLAN.md
 .env
 dist/
 App_Data/
@@ -92,3 +93,9 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+# Separate Next.js development cache from production export
+MyApp.Client/.next-dev/
+MyApp.Client/.next-screenshots/
+
+# Kamal SQLite destination configuration is not a database file.
+!.kamal/secrets.sqlite
