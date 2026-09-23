@@ -61,6 +61,7 @@ public class ConfigureDbMigrations : IHostingStartup
                     RequireSuccess(roles.CreateAsync(new IdentityRole("Admin")).GetAwaiter().GetResult());
                 if (!users.IsInRoleAsync(user, "Admin").GetAwaiter().GetResult())
                     RequireSuccess(users.AddToRoleAsync(user, "Admin").GetAwaiter().GetResult());
+                Console.WriteLine("Admin role confirmed for the existing account.");
             });
             AppTasks.Register("seed-example-data", _ => {
                 var services = appHost.GetApplicationServices();

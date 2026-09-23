@@ -16,6 +16,10 @@ on:
         description: "Populate a fresh preview database with example data"
         type: boolean
         default: false
+      grant_admin_email:
+        description: "Grant Admin to an existing confirmed account (email)"
+        type: string
+        default: ''
 
 env:
   DOCKER_BUILDKIT: 1
@@ -160,3 +164,12 @@ jobs:
             exit 1
           fi
           grep -E 'Created a SQLite backup|Example fixtures' "$log"
+
+      - name: Grant Admin to confirmed account
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.grant_admin_email != '' }}
+        env:
+          ADMIN_EMAIL: ${{ inputs.grant_admin_email }}
+        run: |
+          kamal app exec -d "$DB_PROVIDER" --no-reuse --no-interactive --version=latest \
+            --env "BOOTSTRAP_ADMIN_EMAIL:$ADMIN_EMAIL" \
+            "--AppTasks=grant-admin"
