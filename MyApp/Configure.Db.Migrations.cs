@@ -44,6 +44,23 @@ public class ConfigureDbMigrations : IHostingStartup
             AppTasks.Register("migrate", _ => RunMigrations());
             AppTasks.Register("migrate.revert", args => migrator.Revert(args[0]));
             AppTasks.Register("migrate.rerun", args => migrator.Rerun(args[0]));
+            AppTasks.Register("grant-admin", _ => {
+                var email = Environment.GetEnvironmentVariable("BOOTSTRAP_ADMIN_EMAIL");
+                if (string.IsNullOrWhiteSpace(email))
+                    throw new InvalidOperationException("Set BOOTSTRAP_ADMIN_EMAIL to an existing account email.");
+
+                using var scope = appHost.GetApplicationServices().GetRequiredService<IServiceScopeFactory>().CreateScope();
+                var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                var roles = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+                var user = users.FindByEmailAsync(email).GetAwaiter().GetResult();
+                if (user?.EmailConfirmed != true)
+                    throw new InvalidOperationException("The account must exist and be confirmed before granting Admin.");
+
+                if (!roles.RoleExistsAsync("Admin").GetAwaiter().GetResult())
+                    RequireSuccess(roles.CreateAsync(new IdentityRole("Admin")).GetAwaiter().GetResult());
+                if (!users.IsInRoleAsync(user, "Admin").GetAwaiter().GetResult())
+                    RequireSuccess(users.AddToRoleAsync(user, "Admin").GetAwaiter().GetResult());
+            });
             AppTasks.Register("seed-example-data", _ => {
                 if (!appHost.GetApplicationServices().GetRequiredService<IHostEnvironment>().IsDevelopment())
                     throw new InvalidOperationException("Example data can only be seeded in the Development environment.");
@@ -62,6 +79,11 @@ public class ConfigureDbMigrations : IHostingStartup
                 RunMigrations();
             }
         });
+
+    private static void RequireSuccess(IdentityResult result)
+    {
+        if (!result.Succeeded) throw new InvalidOperationException("Unable to grant the Admin role.");
+    }
 
     // Like next-saas, this unpublished template bootstraps server Identity schemas
     // from EF's provider-specific model; its checked-in EF migration targets SQLite.

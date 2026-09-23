@@ -21,6 +21,15 @@ The template follows next-saas's Kamal destination layout:
 
 Automatic Release runs skip deployment until `SSH_PRIVATE_KEY`, `KAMAL_DEPLOY_IP`, `KAMAL_DEPLOY_HOST`, and `APPSETTINGS_JSON` are configured. A manual Release run fails with the missing secret names. The workflow encodes JSON as `APPSETTINGS_JSON_BASE64`. The application loads that configuration before hosting startup; explicit environment variables override it. The destination's provider and the configured connection string must agree. SQLite connection strings use **`DataSource=` without a space**.
 
+Production does not seed the local demo users. To bootstrap an administrator, first register and confirm an account, then run the one-time app task with that account's email:
+
+```sh
+kamal app exec -d sqlite --no-reuse --no-interactive --version=latest \
+  --env BOOTSTRAP_ADMIN_EMAIL:admin@example.com "--AppTasks=grant-admin"
+```
+
+Use the selected database destination instead of `sqlite` when applicable. The task grants the Admin role only to an existing confirmed account and can be rerun safely.
+
 For a manual deployment, run `kamal server bootstrap -d <provider>`, the matching `config/db/<provider>/pre-deploy.sh` if present, and `kamal deploy -d <provider>`. The PostgreSQL initializer and MySQL image create the application database/login. SQL Server's hook waits for readiness and creates its database/login idempotently inside the accessory, without putting passwords into SSH arguments. Hook failures stop deployment.
 
 SQL Server defaults to Express rather than a development-only edition. Set `MSSQL_PID` to your appropriately licensed edition when required. The example trusts the accessory's self-signed SQL Server certificate inside the private Docker network; use a trusted certificate and `TrustServerCertificate=False` for a managed/remote database. Managed databases can use a custom destination without an accessory and their own connection/TLS settings.

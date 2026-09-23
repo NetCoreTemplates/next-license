@@ -10,7 +10,9 @@ import { Authenticate } from "@/lib/dtos"
 import { appAuth, Redirecting } from "@/lib/auth"
 import { getRedirect } from "@/lib/gateway"
 
-const demoAccounts = ['admin@email.com', 'manager@email.com', 'employee@email.com', 'new@user.com']
+const demoAccounts = process.env.NODE_ENV === 'development'
+    ? ['admin@email.com', 'manager@email.com', 'employee@email.com', 'new@user.com']
+    : []
 
 function SignInContent() {
     const client = useClient()
@@ -62,14 +64,14 @@ function SignInContent() {
                 </section>
             </ApiStateContext.Provider>
 
-            <div className="auth-demo">
+            {demoAccounts.length > 0 && <div className="auth-demo">
                 <p>Demo accounts</p>
                 <div>
                     {demoAccounts.map(email => (
                         <button key={email} type="button" onClick={() => setUser(email)}>{email}</button>
                     ))}
                 </div>
-            </div>
+            </div>}
         </div>
     )
 }
