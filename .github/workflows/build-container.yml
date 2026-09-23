@@ -79,7 +79,7 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          dotnet publish --os linux --arch x64 -c Release \
+          dotnet publish MyApp/MyApp.csproj --os linux --arch x64 -c Release \
             -p:ContainerRepository=${{ env.IMAGE }} \
             -p:ContainerRegistry=ghcr.io -p:ContainerImageTags=latest \
             -p:ContainerPort=80
