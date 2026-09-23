@@ -1,33 +1,44 @@
 'use client'
 
-import Page from "@/components/layout-page"
-import { useSearchParams } from "next/navigation"
 import { Suspense } from "react"
+import Link from "next/link"
+import { MailCheck } from "lucide-react"
+import { useSearchParams } from "next/navigation"
+import Layout from "@/components/layout"
 
 function SignUpConfirmContent() {
     const searchParams = useSearchParams()
     const confirmLink = searchParams.get('confirmLink')
 
     return (
-        <div className="mt-8 mb-20">
-            {!confirmLink ? null :
-                <p className="my-4">
-                    Normally this would be emailed:
-                    <a className="pl-2 font-semibold" id="confirm-link" href={confirmLink}>
-                        Click here to confirm your account
-                    </a>
-                </p>}
-            <p className="my-4">Please check your email to confirm your account.</p>
+        <div className="auth-page">
+            <section className="auth-card">
+                <p className="eyebrow">One step left</p>
+                <h1>Check your email</h1>
+                <p>We sent a confirmation link to the address you registered. Open it to activate your account, then sign in.</p>
+                {confirmLink && (
+                    <div className="studio-alert warn" style={{ marginTop: 22 }}>
+                        <MailCheck size={18}/>
+                        <span>
+                            Email delivery is not configured in development.{' '}
+                            <a id="confirm-link" href={confirmLink}>Confirm this account now</a>.
+                        </span>
+                    </div>
+                )}
+                <p className="auth-footer">
+                    Already confirmed? <Link className="text-link" href="/signin">Sign in</Link>
+                </p>
+            </section>
         </div>
     )
 }
 
 export default function SignUpConfirm() {
     return (
-        <Page title="Signup confirmation">
-            <Suspense fallback={<div className="mt-8 mb-20">Loading...</div>}>
+        <Layout>
+            <Suspense fallback={<div className="auth-page"><div className="auth-card"><div className="skeleton" style={{height:180}}/></div></div>}>
                 <SignUpConfirmContent />
             </Suspense>
-        </Page>
+        </Layout>
     )
 }

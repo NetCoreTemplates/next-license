@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using MyApp.Data;
 using MyApp.Migrations;
 using ServiceStack;
@@ -26,14 +28,10 @@ public class ConfigureDbMigrations : IHostingStartup
                 using (var scope = scopeFactory.CreateScope())
                 {
                     using var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                    db.Database.EnsureCreated();
-                    if (db.Database.GetPendingMigrations().Any()) {
-                        log.LogInformation("Running EF Migrations...");
-                        db.Database.Migrate();
-                    }
+                    EnsureIdentitySchema(db, dbFactory);
 
                     // Only seed users if DB was just created
-                    if (!db.Users.Any())
+                    if (appHost.GetApplicationServices().GetRequiredService<IHostEnvironment>().IsDevelopment() && !db.Users.Any())
                     {
                         log.LogInformation("Adding Seed Users...");
                         AddSeedUsers(scope.ServiceProvider).Wait();
@@ -46,18 +44,35 @@ public class ConfigureDbMigrations : IHostingStartup
             AppTasks.Register("migrate", _ => RunMigrations());
             AppTasks.Register("migrate.revert", args => migrator.Revert(args[0]));
             AppTasks.Register("migrate.rerun", args => migrator.Rerun(args[0]));
+            AppTasks.Register("seed-example-data", _ => {
+                if (!appHost.GetApplicationServices().GetRequiredService<IHostEnvironment>().IsDevelopment())
+                    throw new InvalidOperationException("Example data can only be seeded in the Development environment.");
+                RunMigrations();
+                ExampleDataSeeder.Seed(appHost);
+            });
             AppTasks.Run();
 
             // To ensure there's a valid schema before starting, check for an empty database and run migrations if necessary.
             // Applying later migrations stays a deliberate release step through the migrate app task.
             using var db = dbFactory.Open();
-            if (!db.TableExists<ServiceModel.Booking>())
+            if (!db.TableExists<ServiceModel.SoftwareLicense>())
             {
                 appHost.GetApplicationServices().GetRequiredService<ILogger<ConfigureDbMigrations>>()
                     .LogInformation("Empty database detected; bootstrapping schemas and reference data...");
                 RunMigrations();
             }
         });
+
+    // Like next-saas, this unpublished template bootstraps server Identity schemas
+    // from EF's provider-specific model; its checked-in EF migration targets SQLite.
+    public static void EnsureIdentitySchema(ApplicationDbContext db, IDbConnectionFactory factory)
+    {
+        if (db.Database.IsSqlite()) { db.Database.Migrate(); return; }
+        var creator = db.Database.GetService<IRelationalDatabaseCreator>();
+        if (!creator.Exists()) creator.Create();
+        using var schema = factory.OpenDbConnection();
+        if (!schema.TableExists("AspNetUsers")) creator.CreateTables();
+    }
 
     private async Task AddSeedUsers(IServiceProvider services)
     {

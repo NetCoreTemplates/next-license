@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 [assembly: HostingStartup(typeof(MyApp.HealthChecks))]
 
@@ -8,10 +9,10 @@ public class HealthChecks : IHostingStartup
 {
     public class HealthCheck : IHealthCheck
     {
-        public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken token = default)
+        public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken token = default)
         {
             // Perform health check logic here
-            return HealthCheckResult.Healthy();
+            return Task.FromResult(HealthCheckResult.Healthy());
         }
     }
 
@@ -20,7 +21,8 @@ public class HealthChecks : IHostingStartup
         builder.ConfigureServices(services =>
         {
             services.AddHealthChecks()
-                .AddCheck<HealthCheck>("HealthCheck");
+                .AddCheck<HealthCheck>("HealthCheck", tags: ["liveness"])
+                .AddCheck<LicenseReadiness>("Licensing", tags: ["readiness"]);
 
             services.AddTransient<IStartupFilter, StartupFilter>();
         });
@@ -30,7 +32,8 @@ public class HealthChecks : IHostingStartup
     {
         public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
             => app => {
-                app.UseHealthChecks("/up");
+                app.UseHealthChecks("/up", new HealthCheckOptions { Predicate = check => check.Tags.Contains("liveness") });
+                app.UseHealthChecks("/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains("readiness") });
                 next(app);
             };
     }

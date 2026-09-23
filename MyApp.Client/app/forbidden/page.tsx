@@ -1,12 +1,24 @@
+import Link from 'next/link'
+import { ShieldAlert } from 'lucide-react'
+import Layout from '@/components/layout'
+
+export const metadata = { title: 'No access' }
+
 export default function Forbidden() {
-    return (
-        <div className="text-black bg-white h-screen text-center flex flex-col items-center justify-center">
-            <div>
-                <h1 className="inline-block border-gray-300 border-r m-0 mr-5 py-2 pr-4 text-2xl font-medium align-top">403</h1>
-                <div className="inline-block text-left h-8 align-middle">
-                    <h2 className="text-sm leading-10 font-normal m-0 p-0">You do not have access to this page.</h2>
-                </div>
-            </div>
+  return (
+    <Layout>
+      <div className="studio-page narrow">
+        <div className="studio-empty">
+          <ShieldAlert size={28}/>
+          <p className="eyebrow">403</p>
+          <h1 style={{ fontSize: 'var(--t-xl)' }}>This page needs different access</h1>
+          <p>Your account is signed in but is not permitted here. If this is your software business, sign in with the operator account.</p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <Link href="/account" className="studio-button primary">Go to my licenses</Link>
+            <Link href="/" className="studio-button secondary">Back to home</Link>
+          </div>
         </div>
-    )
+      </div>
+    </Layout>
+  )
 }

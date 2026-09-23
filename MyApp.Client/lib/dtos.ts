@@ -1,6 +1,6 @@
 /* Options:
-Date: 2026-09-09 14:28:51
-Version: 10.15
+Date: 2026-09-22 20:02:54
+Version: 10.21
 Tip: To override a DTO option, remove "//" prefix before updating
 BaseUrl: https://localhost:5001
 
@@ -37,24 +37,25 @@ export interface IHasBearerToken
     bearerToken?: string;
 }
 
-export interface IGet
-{
-}
-
 export interface IPost
 {
 }
 
-export interface ICreateDb<Table>
+export interface IGet
 {
 }
 
-export interface IPatchDb<Table>
+export enum Edition
 {
+    Free = 0,
+    Pro = 10,
+    Enterprise = 20,
 }
 
-export interface IDeleteDb<Table>
+export enum UpdateMode
 {
+    ThroughDate = 'ThroughDate',
+    Lifetime = 'Lifetime',
 }
 
 // @DataContract
@@ -90,41 +91,6 @@ export class QueryDb<T> extends QueryBase
     public constructor(init?: Partial<QueryDb<T>>) { super(init); (Object as any).assign(this, init); }
 }
 
-// @DataContract
-export class AuditBase
-{
-    // @DataMember(Order=1)
-    public createdDate?: string;
-
-    // @DataMember(Order=2)
-    // @Required()
-    public createdBy?: string;
-
-    // @DataMember(Order=3)
-    public modifiedDate?: string;
-
-    // @DataMember(Order=4)
-    // @Required()
-    public modifiedBy?: string;
-
-    // @DataMember(Order=5)
-    public deletedDate?: string;
-
-    // @DataMember(Order=6)
-    public deletedBy?: string;
-
-    public constructor(init?: Partial<AuditBase>) { (Object as any).assign(this, init); }
-}
-
-export enum RoomType
-{
-    Single = 'Single',
-    Double = 'Double',
-    Queen = 'Queen',
-    Twin = 'Twin',
-    Suite = 'Suite',
-}
-
 export class User
 {
     public id?: string;
@@ -135,23 +101,6 @@ export class User
     public profileUrl?: string;
 
     public constructor(init?: Partial<User>) { (Object as any).assign(this, init); }
-}
-
-/** @description Booking Details */
-export class Booking extends AuditBase
-{
-    public id?: number;
-    public name?: string;
-    public roomType?: RoomType;
-    public roomNumber?: number;
-    public bookingStartDate?: string;
-    public bookingEndDate?: string;
-    public cost?: number;
-    public notes?: string;
-    public cancelled?: boolean;
-    public employee?: User;
-
-    public constructor(init?: Partial<Booking>) { super(init); (Object as any).assign(this, init); }
 }
 
 // @DataContract
@@ -193,6 +142,174 @@ export class ResponseStatus
     public constructor(init?: Partial<ResponseStatus>) { (Object as any).assign(this, init); }
 }
 
+export enum OrderStatus
+{
+    Pending = 'Pending',
+    Paid = 'Paid',
+    Failed = 'Failed',
+    PartiallyRefunded = 'PartiallyRefunded',
+    Refunded = 'Refunded',
+}
+
+// @DataContract
+export class AuditBase
+{
+    // @DataMember(Order=1)
+    public createdDate?: string;
+
+    // @DataMember(Order=2)
+    // @Required()
+    public createdBy?: string;
+
+    // @DataMember(Order=3)
+    public modifiedDate?: string;
+
+    // @DataMember(Order=4)
+    // @Required()
+    public modifiedBy?: string;
+
+    // @DataMember(Order=5)
+    public deletedDate?: string;
+
+    // @DataMember(Order=6)
+    public deletedBy?: string;
+
+    public constructor(init?: Partial<AuditBase>) { (Object as any).assign(this, init); }
+}
+
+export enum LicenseStatus
+{
+    Active = 'Active',
+    Revoked = 'Revoked',
+}
+
+export class SoftwareLicense extends AuditBase
+{
+    public id?: string;
+    public shortKeySuffix?: string;
+    public productId?: string;
+    public edition?: Edition;
+    public updateMode?: UpdateMode;
+    public updatesThroughUtc?: string;
+    public licenseeName?: string;
+    public licenseeOrganization?: string;
+    public seats?: number;
+    public issuedAtUtc?: string;
+    public status?: LicenseStatus;
+    public userId?: string;
+    public orderId?: string;
+    public revokedAtUtc?: string;
+    // @StringLength(2147483647)
+    public revokedReason?: string;
+
+    public signingKeyId?: string;
+    public blobVersion?: number;
+
+    public constructor(init?: Partial<SoftwareLicense>) { super(init); (Object as any).assign(this, init); }
+}
+
+export enum OrderKind
+{
+    NewPurchase = 'NewPurchase',
+    Renewal = 'Renewal',
+    LifetimeUpgrade = 'LifetimeUpgrade',
+    EditionUpgrade = 'EditionUpgrade',
+}
+
+export class LicenseOrder extends AuditBase
+{
+    public id?: string;
+    public orderNumber?: string;
+    public userId?: string;
+    public kind?: OrderKind;
+    public licenseId?: string;
+    public seats?: number;
+    public licenseeName?: string;
+    public licenseeOrganization?: string;
+    public currency?: string;
+    public expectedAmountCents?: number;
+    public finalAmountCents?: number;
+    public agreementVersion?: string;
+    public agreementAcceptedAtUtc?: string;
+    // @StringLength(255)
+    public stripeCheckoutSessionId?: string;
+
+    // @StringLength(255)
+    public stripePaymentIntentId?: string;
+
+    public stripeInvoiceId?: string;
+    public status?: OrderStatus;
+    public paidAtUtc?: string;
+    public requiresReview?: boolean;
+
+    public constructor(init?: Partial<LicenseOrder>) { super(init); (Object as any).assign(this, init); }
+}
+
+export class LicenseDispute
+{
+    public stripeDisputeId?: string;
+    public orderId?: string;
+    public amountCents?: number;
+    public currency?: string;
+    public status?: string;
+    // @StringLength(2147483647)
+    public reason?: string;
+
+    public createdAtUtc?: string;
+    public updatedAtUtc?: string;
+    public reviewed?: boolean;
+    public reviewedBy?: string;
+    // @StringLength(2147483647)
+    public reviewNotes?: string;
+
+    public constructor(init?: Partial<LicenseDispute>) { (Object as any).assign(this, init); }
+}
+
+export class LicenseRefund
+{
+    public stripeRefundId?: string;
+    public orderId?: string;
+    public amountCents?: number;
+    public status?: string;
+    // @StringLength(2147483647)
+    public reason?: string;
+
+    public createdAtUtc?: string;
+
+    public constructor(init?: Partial<LicenseRefund>) { (Object as any).assign(this, init); }
+}
+
+export class LicenseCustomer
+{
+    public id?: string;
+    public name?: string;
+    public email?: string;
+
+    public constructor(init?: Partial<LicenseCustomer>) { (Object as any).assign(this, init); }
+}
+
+export class GitHubDownloadAsset
+{
+    public name?: string;
+    public url?: string;
+    public size?: number;
+
+    public constructor(init?: Partial<GitHubDownloadAsset>) { (Object as any).assign(this, init); }
+}
+
+export class GitHubDownloadRelease
+{
+    public name?: string;
+    public tag?: string;
+    public url?: string;
+    public notes?: string;
+    public publishedAt?: string;
+    public prerelease?: boolean;
+    public assets?: GitHubDownloadAsset[] = [];
+
+    public constructor(init?: Partial<GitHubDownloadRelease>) { (Object as any).assign(this, init); }
+}
+
 // @DataContract
 export class QueryResponse<T>
 {
@@ -212,6 +329,175 @@ export class QueryResponse<T>
     public responseStatus?: ResponseStatus;
 
     public constructor(init?: Partial<QueryResponse<T>>) { (Object as any).assign(this, init); }
+}
+
+export class LicenseBlobResponse
+{
+    public blob?: string;
+    public status?: string;
+    public responseStatus?: ResponseStatus;
+
+    public constructor(init?: Partial<LicenseBlobResponse>) { (Object as any).assign(this, init); }
+}
+
+export class CustomerOrder
+{
+    public id?: string;
+    public productName?: string;
+    public description?: string;
+    public amountCents?: number;
+    public currency?: string;
+    public seats?: number;
+    public status?: OrderStatus;
+    public requiresReview?: boolean;
+    public hasInvoice?: boolean;
+    public createdAtUtc?: string;
+    public message?: string;
+
+    public constructor(init?: Partial<CustomerOrder>) { (Object as any).assign(this, init); }
+}
+
+export class CustomerOrdersResponse
+{
+    public results?: CustomerOrder[] = [];
+    public responseStatus?: ResponseStatus;
+
+    public constructor(init?: Partial<CustomerOrdersResponse>) { (Object as any).assign(this, init); }
+}
+
+// @DataContract
+export class EmptyResponse
+{
+    // @DataMember(Order=1)
+    public responseStatus?: ResponseStatus;
+
+    public constructor(init?: Partial<EmptyResponse>) { (Object as any).assign(this, init); }
+}
+
+export class LicenseNotificationPreferences
+{
+    public userId?: string;
+    public updateReminders?: boolean;
+    public releaseAnnouncements?: boolean;
+    public winBack?: boolean;
+
+    public constructor(init?: Partial<LicenseNotificationPreferences>) { (Object as any).assign(this, init); }
+}
+
+export class PriceBook extends AuditBase
+{
+    public sku?: string;
+    public edition?: Edition;
+    public updateMode?: UpdateMode;
+    public termMonths?: number;
+    public currency?: string;
+    public unitAmountCents?: number;
+    public stripePriceId?: string;
+    public isActive?: boolean;
+
+    public constructor(init?: Partial<PriceBook>) { super(init); (Object as any).assign(this, init); }
+}
+
+export class LicenseAgreement extends AuditBase
+{
+    public version?: string;
+    public effectiveAtUtc?: string;
+    // @StringLength(2147483647)
+    public bodyMarkdown?: string;
+
+    public constructor(init?: Partial<LicenseAgreement>) { super(init); (Object as any).assign(this, init); }
+}
+
+export class LicensingDashboardResponse
+{
+    public activeLicenses?: number;
+    public ordersRequiringReview?: number;
+    public pendingStripeEvents?: number;
+    public prices?: PriceBook[] = [];
+    public agreements?: LicenseAgreement[] = [];
+    public responseStatus?: ResponseStatus;
+
+    public constructor(init?: Partial<LicensingDashboardResponse>) { (Object as any).assign(this, init); }
+}
+
+export class AccountLicensesResponse
+{
+    public results?: SoftwareLicense[] = [];
+    public responseStatus?: ResponseStatus;
+
+    public constructor(init?: Partial<AccountLicensesResponse>) { (Object as any).assign(this, init); }
+}
+
+export class AccountOrdersResponse
+{
+    public results?: LicenseOrder[] = [];
+    public responseStatus?: ResponseStatus;
+
+    public constructor(init?: Partial<AccountOrdersResponse>) { (Object as any).assign(this, init); }
+}
+
+export class LicenseDisputesResponse
+{
+    public results?: LicenseDispute[] = [];
+    public responseStatus?: ResponseStatus;
+
+    public constructor(init?: Partial<LicenseDisputesResponse>) { (Object as any).assign(this, init); }
+}
+
+export class LicenseCheckoutResponse
+{
+    public orderId?: string;
+    public url?: string;
+    public responseStatus?: ResponseStatus;
+
+    public constructor(init?: Partial<LicenseCheckoutResponse>) { (Object as any).assign(this, init); }
+}
+
+export class OrderInvoiceResponse
+{
+    public url?: string;
+    public responseStatus?: ResponseStatus;
+
+    public constructor(init?: Partial<OrderInvoiceResponse>) { (Object as any).assign(this, init); }
+}
+
+export class RefundLicenseOrderResponse
+{
+    public result?: LicenseRefund;
+    public responseStatus?: ResponseStatus;
+
+    public constructor(init?: Partial<RefundLicenseOrderResponse>) { (Object as any).assign(this, init); }
+}
+
+export class LicensePricingResponse
+{
+    public results?: PriceBook[] = [];
+    public agreement?: LicenseAgreement;
+    public responseStatus?: ResponseStatus;
+
+    public constructor(init?: Partial<LicensePricingResponse>) { (Object as any).assign(this, init); }
+}
+
+export class LicenseTransfer
+{
+    public id?: string;
+    public licenseId?: string;
+    public fromUserId?: string;
+    public toUserId?: string;
+    public createdAtUtc?: string;
+    public expiresAtUtc?: string;
+    public acceptedAtUtc?: string;
+    public cancelledAtUtc?: string;
+
+    public constructor(init?: Partial<LicenseTransfer>) { (Object as any).assign(this, init); }
+}
+
+export class LicenseTransfersResponse
+{
+    public results?: LicenseTransfer[] = [];
+    public responseStatus?: ResponseStatus;
+
+    public constructor(init?: Partial<LicenseTransfersResponse>) { (Object as any).assign(this, init); }
 }
 
 export class HelloResponse
@@ -263,6 +549,35 @@ export class RegisterResponse implements IHasSessionId, IHasBearerToken
     public constructor(init?: Partial<RegisterResponse>) { (Object as any).assign(this, init); }
 }
 
+export class LicenseCustomersResponse
+{
+    public results?: LicenseCustomer[] = [];
+    public responseStatus?: ResponseStatus;
+
+    public constructor(init?: Partial<LicenseCustomersResponse>) { (Object as any).assign(this, init); }
+}
+
+export class SoftwareSetupResponse
+{
+    public stripeConfigured?: boolean;
+    public webhookConfigured?: boolean;
+    public signingConfigured?: boolean;
+    public liveMode?: boolean;
+    public repository?: string;
+    public responseStatus?: ResponseStatus;
+
+    public constructor(init?: Partial<SoftwareSetupResponse>) { (Object as any).assign(this, init); }
+}
+
+export class GitHubDownloadsResponse
+{
+    public repository?: string;
+    public results?: GitHubDownloadRelease[] = [];
+    public responseStatus?: ResponseStatus;
+
+    public constructor(init?: Partial<GitHubDownloadsResponse>) { (Object as any).assign(this, init); }
+}
+
 // @DataContract
 export class AuthenticateResponse implements IHasSessionId, IHasBearerToken
 {
@@ -311,16 +626,375 @@ export class AuthenticateResponse implements IHasSessionId, IHasBearerToken
     public constructor(init?: Partial<AuthenticateResponse>) { (Object as any).assign(this, init); }
 }
 
-// @DataContract
-export class IdResponse
+// @Route("/licensing/activate", "POST")
+// @Route("/licensing/refresh", "POST")
+export class ActivateLicense implements IReturn<LicenseBlobResponse>, IPost
 {
-    // @DataMember(Order=1)
+    public key?: string;
+    public blob?: string;
+
+    public constructor(init?: Partial<ActivateLicense>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'ActivateLicense'; }
+    public getMethod() { return 'POST'; }
+    public createResponse() { return new LicenseBlobResponse(); }
+}
+
+// @Route("/account/orders", "GET")
+// @ValidateRequest(Validator="IsAuthenticated")
+export class GetAccountOrders implements IReturn<CustomerOrdersResponse>, IGet
+{
+
+    public constructor(init?: Partial<GetAccountOrders>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'GetAccountOrders'; }
+    public getMethod() { return 'GET'; }
+    public createResponse() { return new CustomerOrdersResponse(); }
+}
+
+// @ValidateRequest(Validator="IsAuthenticated")
+export class RefreshAccountOrder implements IReturn<CustomerOrder>, IPost
+{
     public id?: string;
 
-    // @DataMember(Order=2)
-    public responseStatus?: ResponseStatus;
+    public constructor(init?: Partial<RefreshAccountOrder>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'RefreshAccountOrder'; }
+    public getMethod() { return 'POST'; }
+    public createResponse() { return new CustomerOrder(); }
+}
 
-    public constructor(init?: Partial<IdResponse>) { (Object as any).assign(this, init); }
+// @Route("/stripe/webhook", "POST")
+export class LicenseStripeWebhook implements IReturn<EmptyResponse>, IPost
+{
+
+    public constructor(init?: Partial<LicenseStripeWebhook>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'LicenseStripeWebhook'; }
+    public getMethod() { return 'POST'; }
+    public createResponse() { return new EmptyResponse(); }
+}
+
+// @ValidateRequest(Validator="IsAdmin")
+export class ExtendUpdatesThrough implements IReturn<LicenseBlobResponse>, IPost
+{
+    public id?: string;
+    public expectedBlobVersion?: number;
+    public updatesThroughUtc?: string;
+    public reason?: string;
+
+    public constructor(init?: Partial<ExtendUpdatesThrough>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'ExtendUpdatesThrough'; }
+    public getMethod() { return 'POST'; }
+    public createResponse() { return new LicenseBlobResponse(); }
+}
+
+// @ValidateRequest(Validator="IsAdmin")
+export class UpgradeToLifetimeUpdates implements IReturn<LicenseBlobResponse>, IPost
+{
+    public id?: string;
+    public expectedBlobVersion?: number;
+    public reason?: string;
+
+    public constructor(init?: Partial<UpgradeToLifetimeUpdates>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'UpgradeToLifetimeUpdates'; }
+    public getMethod() { return 'POST'; }
+    public createResponse() { return new LicenseBlobResponse(); }
+}
+
+// @ValidateRequest(Validator="IsAdmin")
+export class ReissueLicense implements IReturn<LicenseBlobResponse>, IPost
+{
+    public id?: string;
+    public expectedBlobVersion?: number;
+    public rotateShortKey?: boolean;
+    public reason?: string;
+
+    public constructor(init?: Partial<ReissueLicense>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'ReissueLicense'; }
+    public getMethod() { return 'POST'; }
+    public createResponse() { return new LicenseBlobResponse(); }
+}
+
+// @ValidateRequest(Validator="IsAuthenticated")
+export class GetLicenseNotificationPreferences implements IReturn<LicenseNotificationPreferences>, IGet
+{
+
+    public constructor(init?: Partial<GetLicenseNotificationPreferences>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'GetLicenseNotificationPreferences'; }
+    public getMethod() { return 'GET'; }
+    public createResponse() { return new LicenseNotificationPreferences(); }
+}
+
+// @ValidateRequest(Validator="IsAuthenticated")
+export class SaveLicenseNotificationPreferences implements IReturnVoid, IPost
+{
+    public updateReminders?: boolean;
+    public releaseAnnouncements?: boolean;
+    public winBack?: boolean;
+
+    public constructor(init?: Partial<SaveLicenseNotificationPreferences>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'SaveLicenseNotificationPreferences'; }
+    public getMethod() { return 'POST'; }
+    public createResponse() {}
+}
+
+// @Route("/account/licenses/{Id}/resend", "POST")
+// @ValidateRequest(Validator="IsAuthenticated")
+export class ResendLicense implements IReturnVoid, IPost
+{
+    public id?: string;
+
+    public constructor(init?: Partial<ResendLicense>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'ResendLicense'; }
+    public getMethod() { return 'POST'; }
+    public createResponse() {}
+}
+
+// @ValidateRequest(Validator="IsAdmin")
+export class GetLicensingDashboard implements IReturn<LicensingDashboardResponse>, IGet
+{
+
+    public constructor(init?: Partial<GetLicensingDashboard>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'GetLicensingDashboard'; }
+    public getMethod() { return 'GET'; }
+    public createResponse() { return new LicensingDashboardResponse(); }
+}
+
+// @ValidateRequest(Validator="IsAdmin")
+export class PublishLicenseAgreement implements IReturn<LicenseAgreement>, IPost
+{
+    public version?: string;
+    public bodyMarkdown?: string;
+
+    public constructor(init?: Partial<PublishLicenseAgreement>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'PublishLicenseAgreement'; }
+    public getMethod() { return 'POST'; }
+    public createResponse() { return new LicenseAgreement(); }
+}
+
+// @ValidateRequest(Validator="IsAdmin")
+export class SearchLicenses implements IReturn<AccountLicensesResponse>, IGet
+{
+    public query?: string;
+    public userId?: string;
+    public keySuffix?: string;
+    public skip?: number;
+
+    public constructor(init?: Partial<SearchLicenses>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'SearchLicenses'; }
+    public getMethod() { return 'GET'; }
+    public createResponse() { return new AccountLicensesResponse(); }
+}
+
+// @ValidateRequest(Validator="IsAdmin")
+export class SearchOrders implements IReturn<AccountOrdersResponse>, IGet
+{
+    public query?: string;
+    public userId?: string;
+    public requiresReview?: boolean;
+    public skip?: number;
+
+    public constructor(init?: Partial<SearchOrders>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'SearchOrders'; }
+    public getMethod() { return 'GET'; }
+    public createResponse() { return new AccountOrdersResponse(); }
+}
+
+// @ValidateRequest(Validator="IsAdmin")
+export class ListLicenseDisputes implements IReturn<LicenseDisputesResponse>, IGet
+{
+    public reviewed?: boolean;
+    public skip?: number;
+
+    public constructor(init?: Partial<ListLicenseDisputes>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'ListLicenseDisputes'; }
+    public getMethod() { return 'GET'; }
+    public createResponse() { return new LicenseDisputesResponse(); }
+}
+
+// @ValidateRequest(Validator="IsAdmin")
+export class ReviewLicenseDispute implements IReturnVoid, IPost
+{
+    public id?: string;
+    public notes?: string;
+
+    public constructor(init?: Partial<ReviewLicenseDispute>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'ReviewLicenseDispute'; }
+    public getMethod() { return 'POST'; }
+    public createResponse() {}
+}
+
+// @ValidateRequest(Validator="IsAdmin")
+export class RetryLicenseStripeEvent implements IReturnVoid, IPost
+{
+    public id?: string;
+
+    public constructor(init?: Partial<RetryLicenseStripeEvent>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'RetryLicenseStripeEvent'; }
+    public getMethod() { return 'POST'; }
+    public createResponse() {}
+}
+
+// @Route("/checkout", "POST")
+// @ValidateRequest(Validator="IsAuthenticated")
+export class CreateLicenseCheckout implements IReturn<LicenseCheckoutResponse>, IPost
+{
+    public sku?: string;
+    public licenseId?: string;
+    public seats?: number;
+    public licenseeName?: string;
+    public licenseeOrganization?: string;
+    public agreementVersion?: string;
+    public acceptAgreement?: boolean;
+
+    public constructor(init?: Partial<CreateLicenseCheckout>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'CreateLicenseCheckout'; }
+    public getMethod() { return 'POST'; }
+    public createResponse() { return new LicenseCheckoutResponse(); }
+}
+
+// @Route("/account/orders/{Id}/invoice", "GET")
+// @ValidateRequest(Validator="IsAuthenticated")
+export class GetOrderInvoice implements IReturn<OrderInvoiceResponse>, IGet
+{
+    public id?: string;
+
+    public constructor(init?: Partial<GetOrderInvoice>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'GetOrderInvoice'; }
+    public getMethod() { return 'GET'; }
+    public createResponse() { return new OrderInvoiceResponse(); }
+}
+
+// @ValidateRequest(Validator="IsAdmin")
+export class RefundLicenseOrder implements IReturn<RefundLicenseOrderResponse>, IPost
+{
+    public id?: string;
+    public requestId?: string;
+    public amountCents?: number;
+    // @StringLength(2147483647)
+    public reason?: string;
+
+    public constructor(init?: Partial<RefundLicenseOrder>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'RefundLicenseOrder'; }
+    public getMethod() { return 'POST'; }
+    public createResponse() { return new RefundLicenseOrderResponse(); }
+}
+
+// @ValidateRequest(Validator="IsAdmin")
+export class ReviewLicenseOrder implements IReturnVoid, IPost
+{
+    public id?: string;
+    public notes?: string;
+
+    public constructor(init?: Partial<ReviewLicenseOrder>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'ReviewLicenseOrder'; }
+    public getMethod() { return 'POST'; }
+    public createResponse() {}
+}
+
+// @Route("/licensing/pricing", "GET")
+export class GetLicensePricing implements IReturn<LicensePricingResponse>, IGet
+{
+
+    public constructor(init?: Partial<GetLicensePricing>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'GetLicensePricing'; }
+    public getMethod() { return 'GET'; }
+    public createResponse() { return new LicensePricingResponse(); }
+}
+
+// @Route("/account/licenses", "GET")
+// @ValidateRequest(Validator="IsAuthenticated")
+export class GetAccountLicenses implements IReturn<AccountLicensesResponse>, IGet
+{
+
+    public constructor(init?: Partial<GetAccountLicenses>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'GetAccountLicenses'; }
+    public getMethod() { return 'GET'; }
+    public createResponse() { return new AccountLicensesResponse(); }
+}
+
+// @Route("/account/licenses/{Id}/blob", "GET")
+// @ValidateRequest(Validator="IsAuthenticated")
+export class GetLicenseBlob implements IReturn<LicenseBlobResponse>, IGet
+{
+    public id?: string;
+
+    public constructor(init?: Partial<GetLicenseBlob>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'GetLicenseBlob'; }
+    public getMethod() { return 'GET'; }
+    public createResponse() { return new LicenseBlobResponse(); }
+}
+
+// @ValidateRequest(Validator="IsAdmin")
+export class IssueLicense implements IReturn<LicenseBlobResponse>, IPost
+{
+    public userId?: string;
+    public licenseeName?: string;
+    public licenseeOrganization?: string;
+    public seats?: number;
+    public edition?: Edition;
+    public updateMode?: UpdateMode;
+    public updatesThroughUtc?: string;
+
+    public constructor(init?: Partial<IssueLicense>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'IssueLicense'; }
+    public getMethod() { return 'POST'; }
+    public createResponse() { return new LicenseBlobResponse(); }
+}
+
+// @ValidateRequest(Validator="IsAdmin")
+export class RevokeLicense implements IReturnVoid, IPost
+{
+    public id?: string;
+    // @Validate(Validator="NotEmpty")
+    public reason?: string;
+
+    public constructor(init?: Partial<RevokeLicense>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'RevokeLicense'; }
+    public getMethod() { return 'POST'; }
+    public createResponse() {}
+}
+
+// @Route("/account/licenses/{Id}/transfer", "POST")
+// @ValidateRequest(Validator="IsAuthenticated")
+export class TransferLicense implements IReturn<LicenseTransfer>, IPost
+{
+    public id?: string;
+    public recipientEmail?: string;
+
+    public constructor(init?: Partial<TransferLicense>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'TransferLicense'; }
+    public getMethod() { return 'POST'; }
+    public createResponse() { return new LicenseTransfer(); }
+}
+
+// @ValidateRequest(Validator="IsAuthenticated")
+export class ListLicenseTransfers implements IReturn<LicenseTransfersResponse>, IGet
+{
+
+    public constructor(init?: Partial<ListLicenseTransfers>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'ListLicenseTransfers'; }
+    public getMethod() { return 'GET'; }
+    public createResponse() { return new LicenseTransfersResponse(); }
+}
+
+// @ValidateRequest(Validator="IsAuthenticated")
+export class CancelLicenseTransfer implements IReturnVoid, IPost
+{
+    public id?: string;
+
+    public constructor(init?: Partial<CancelLicenseTransfer>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'CancelLicenseTransfer'; }
+    public getMethod() { return 'POST'; }
+    public createResponse() {}
+}
+
+// @ValidateRequest(Validator="IsAuthenticated")
+export class AcceptLicenseTransfer implements IReturnVoid, IPost
+{
+    public id?: string;
+
+    public constructor(init?: Partial<AcceptLicenseTransfer>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'AcceptLicenseTransfer'; }
+    public getMethod() { return 'POST'; }
+    public createResponse() {}
 }
 
 // @Route("/hello/{Name}")
@@ -388,6 +1062,72 @@ export class ConfirmEmail implements IReturnVoid, IGet
     public createResponse() {}
 }
 
+// @ValidateRequest(Validator="IsAdmin")
+export class SearchLicenseCustomers implements IReturn<LicenseCustomersResponse>, IGet
+{
+    public query?: string;
+    public skip?: number;
+
+    public constructor(init?: Partial<SearchLicenseCustomers>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'SearchLicenseCustomers'; }
+    public getMethod() { return 'GET'; }
+    public createResponse() { return new LicenseCustomersResponse(); }
+}
+
+// @ValidateRequest(Validator="IsAdmin")
+export class GetSoftwareSetup implements IReturn<SoftwareSetupResponse>, IGet
+{
+
+    public constructor(init?: Partial<GetSoftwareSetup>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'GetSoftwareSetup'; }
+    public getMethod() { return 'GET'; }
+    public createResponse() { return new SoftwareSetupResponse(); }
+}
+
+// @ValidateRequest(Validator="IsAdmin")
+export class SetSoftwarePrice implements IReturn<PriceBook>, IPost
+{
+    public sku?: string;
+    public unitAmountCents?: number;
+    public currency?: string;
+
+    public constructor(init?: Partial<SetSoftwarePrice>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'SetSoftwarePrice'; }
+    public getMethod() { return 'POST'; }
+    public createResponse() { return new PriceBook(); }
+}
+
+// @ValidateRequest(Validator="IsAdmin")
+export class CreateMissingStripe implements IReturn<LicensePricingResponse>, IPost
+{
+
+    public constructor(init?: Partial<CreateMissingStripe>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'CreateMissingStripe'; }
+    public getMethod() { return 'POST'; }
+    public createResponse() { return new LicensePricingResponse(); }
+}
+
+// @ValidateRequest(Validator="IsAdmin")
+export class ApproveSoftwarePrice implements IReturn<PriceBook>, IPost
+{
+    public sku?: string;
+    public approved?: boolean;
+
+    public constructor(init?: Partial<ApproveSoftwarePrice>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'ApproveSoftwarePrice'; }
+    public getMethod() { return 'POST'; }
+    public createResponse() { return new PriceBook(); }
+}
+
+export class GetGitHubDownloads implements IReturn<GitHubDownloadsResponse>, IGet
+{
+
+    public constructor(init?: Partial<GetGitHubDownloads>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'GetGitHubDownloads'; }
+    public getMethod() { return 'GET'; }
+    public createResponse() { return new GitHubDownloadsResponse(); }
+}
+
 /** @description Sign In */
 // @Route("/auth", "GET,POST")
 // @Route("/auth/{provider}", "POST")
@@ -429,18 +1169,6 @@ export class Authenticate implements IReturn<AuthenticateResponse>, IPost
     public createResponse() { return new AuthenticateResponse(); }
 }
 
-// @ValidateRequest(Validator="HasRole(`Employee`)")
-export class QueryBookings extends QueryDb<Booking> implements IReturn<QueryResponse<Booking>>
-{
-    public id?: number;
-    public ids?: number[];
-
-    public constructor(init?: Partial<QueryBookings>) { super(init); (Object as any).assign(this, init); }
-    public getTypeName() { return 'QueryBookings'; }
-    public getMethod() { return 'GET'; }
-    public createResponse() { return new QueryResponse<Booking>(); }
-}
-
 // @ValidateRequest(Validator="IsAdmin")
 export class QueryUsers extends QueryDb<User> implements IReturn<QueryResponse<User>>
 {
@@ -450,65 +1178,5 @@ export class QueryUsers extends QueryDb<User> implements IReturn<QueryResponse<U
     public getTypeName() { return 'QueryUsers'; }
     public getMethod() { return 'GET'; }
     public createResponse() { return new QueryResponse<User>(); }
-}
-
-// @ValidateRequest(Validator="HasRole(`Employee`)")
-export class CreateBooking implements IReturn<IdResponse>, ICreateDb<Booking>
-{
-    // @Validate(Validator="NotEmpty")
-    public name?: string;
-
-    public roomType?: RoomType;
-    // @Validate(Validator="GreaterThan(0)")
-    public roomNumber?: number;
-
-    public bookingStartDate?: string;
-    public bookingEndDate?: string;
-    // @Validate(Validator="GreaterThan(0)")
-    public cost?: number;
-
-    public notes?: string;
-    public cancelled?: boolean;
-
-    public constructor(init?: Partial<CreateBooking>) { (Object as any).assign(this, init); }
-    public getTypeName() { return 'CreateBooking'; }
-    public getMethod() { return 'POST'; }
-    public createResponse() { return new IdResponse(); }
-}
-
-// @ValidateRequest(Validator="HasRole(`Employee`)")
-export class UpdateBooking implements IReturn<IdResponse>, IPatchDb<Booking>
-{
-    public id?: number;
-    public name?: string;
-    public roomType?: RoomType;
-    // @Validate(Validator="GreaterThan(0)")
-    public roomNumber?: number;
-
-    public bookingStartDate?: string;
-    public bookingEndDate?: string;
-    // @Validate(Validator="GreaterThan(0)")
-    public cost?: number;
-
-    public notes?: string;
-    public cancelled?: boolean;
-
-    public constructor(init?: Partial<UpdateBooking>) { (Object as any).assign(this, init); }
-    public getTypeName() { return 'UpdateBooking'; }
-    public getMethod() { return 'PATCH'; }
-    public createResponse() { return new IdResponse(); }
-}
-
-// @ValidateRequest(Validator="HasRole(`Manager`)")
-// @ValidateRequest(Validator="HasRole(`Employee`)")
-export class DeleteBooking implements IReturnVoid, IDeleteDb<Booking>
-{
-    public id?: number;
-    public ids?: number[];
-
-    public constructor(init?: Partial<DeleteBooking>) { (Object as any).assign(this, init); }
-    public getTypeName() { return 'DeleteBooking'; }
-    public getMethod() { return 'DELETE'; }
-    public createResponse() {}
 }
 

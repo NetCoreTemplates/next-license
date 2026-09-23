@@ -12,6 +12,7 @@
         <ProjectReference Include="..\MyApp.ServiceInterface\MyApp.ServiceInterface.csproj" />
         <ProjectReference Include="..\MyApp.ServiceModel\MyApp.ServiceModel.csproj" />
         <ProjectReference Include="..\MyApp\MyApp.csproj" />
+        <ProjectReference Include="..\MyApp.Licensing\MyApp.Licensing.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -20,6 +21,9 @@
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.*" />
         <PackageReference Include="ServiceStack" Version="10.*" />
         <PackageReference Include="ServiceStack.Kestrel" Version="10.*" />
+        <PackageReference Include="ServiceStack.OrmLite.PostgreSQL" Version="10.*" />
+        <PackageReference Include="ServiceStack.OrmLite.MySql" Version="10.*" />
+        <PackageReference Include="ServiceStack.OrmLite.SqlServer" Version="10.*" />
     </ItemGroup>
 
 </Project>

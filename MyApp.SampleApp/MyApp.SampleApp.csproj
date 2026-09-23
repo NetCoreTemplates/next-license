@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+  <ItemGroup><PackageReference Include="Tmds.DBus.Protocol" Version="0.92.0" /><PackageReference Include="Avalonia.Desktop" Version="12.0.0" /><PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.0" /></ItemGroup>
+  <ItemGroup><ProjectReference Include="../MyApp.Licensing/MyApp.Licensing.csproj" /></ItemGroup>
+  <PropertyGroup><AppBuildDate Condition="'$(AppBuildDate)' == ''">2026-09-21</AppBuildDate></PropertyGroup>
+  <ItemGroup><AssemblyMetadata Include="BuildDate" Value="$(AppBuildDate)" /></ItemGroup>
+  <ItemGroup Condition="'$(LicensePublicKeyFile)' != ''">
+    <EmbeddedResource Include="$(LicensePublicKeyFile)" LogicalName="Acme.LicensePublicKey" />
+  </ItemGroup>
+  <Target Name="RequireLicensePublishIdentity" BeforeTargets="Publish">
+    <Error Condition="'$(LicensePublicKeyFile)' == ''" Text="Publish requires LicensePublicKeyFile containing only your public verification PEM." />
+  </Target>
+</Project>

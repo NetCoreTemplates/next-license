@@ -1,19 +1,17 @@
 import Nav from "./nav"
 import Footer from "./footer"
-import Meta from "./meta"
 
 type Props = {
-  preview?: boolean
   children: React.ReactNode
 }
 
-const Layout = ({ preview, children }: Props) => {
+const Layout = ({ children }: Props) => {
   return (
     <>
-      <Meta />
+      <a className="skip-link" href="#main">Skip to content</a>
       <Nav />
-      <div className="min-h-screen">
-        <main>{children}</main>
+      <div className="studio-content">
+        <main id="main" tabIndex={-1}>{children}</main>
       </div>
       <Footer />
     </>

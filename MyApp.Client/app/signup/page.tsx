@@ -1,16 +1,16 @@
 'use client'
 
 import { SyntheticEvent, Suspense, useEffect, useState } from "react"
-import { useClient, FormLoading, ErrorSummary, TextInput, PrimaryButton, SecondaryButton, ApiStateContext } from "@servicestack/react"
+import { useClient, FormLoading, ErrorSummary, TextInput, PrimaryButton, ApiStateContext } from "@servicestack/react"
 import { serializeToObject, leftPart, rightPart, toPascalCase } from "@servicestack/client"
-import {useRouter, useSearchParams} from "next/navigation"
-import Page from "@/components/layout-page"
+import { useRouter, useSearchParams } from "next/navigation"
+import Link from "next/link"
+import Layout from "@/components/layout"
 import { getRedirect } from "@/lib/gateway"
 import { Register, RegisterResponse } from "@/lib/dtos"
 import { appAuth, Redirecting } from "@/lib/auth"
 
 function SignUpContent() {
-
     const client = useClient()
     const [displayName, setDisplayName] = useState<string>()
     const [username, setUsername] = useState<string>()
@@ -21,8 +21,8 @@ function SignUpContent() {
     const { user, revalidate } = appAuth()
 
     const setUser = (email: string) => {
-        let first = leftPart(email, '@');
-        let last = rightPart(leftPart(email, '.'), '@')
+        const first = leftPart(email, '@')
+        const last = rightPart(leftPart(email, '.'), '@')
         setDisplayName(toPascalCase(first) + ' ' + toPascalCase(last))
         setUsername(email)
         setPassword('p@55wOrd')
@@ -40,13 +40,13 @@ function SignUpContent() {
     const onSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault()
 
-        const {displayName, userName, password, confirmPassword, autoLogin} = serializeToObject(e.currentTarget);
+        const { displayName, userName, password, confirmPassword, autoLogin } = serializeToObject(e.currentTarget)
         if (password !== confirmPassword) {
-            client.setError({fieldName: 'confirmPassword', message: 'Passwords do not match'})
+            client.setError({ fieldName: 'confirmPassword', message: 'Passwords do not match' })
             return
         }
 
-        const api = await client.api(new Register({displayName, email: userName, password, confirmPassword, autoLogin}))
+        const api = await client.api(new Register({ displayName, email: userName, password, confirmPassword, autoLogin }))
         if (api.succeeded) {
             await revalidate()
             const redirectUrl = (api.response as RegisterResponse).redirectUrl
@@ -59,56 +59,49 @@ function SignUpContent() {
     }
 
     return (
-        <>
+        <div className="auth-page">
             <ApiStateContext.Provider value={client}>
-                <section className="mt-4 max-w-xl sm:shadow overflow-hidden sm:rounded-md">
-                    <form onSubmit={onSubmit} className="max-w-prose">
-                        <div className="shadow overflow-hidden sm:rounded-md">
-                            <ErrorSummary except="displayName,userName,password,confirmPassword"/>
-                            <div className="px-4 py-5 bg-white dark:bg-black space-y-6 sm:p-6">
-                                <h3 className="mb-4 text-2xl font-semibold text-gray-900 dark:text-gray-100 leading-tight">
-                                    Create a new account.
-                                </h3>
-                                <div className="flex flex-col gap-y-4">
-                                    <TextInput id="displayName" help="Your first and last name" autoComplete="name"
-                                               value={displayName} onChange={setDisplayName}/>
-                                    <TextInput id="userName" autoComplete="email"
-                                               value={username} onChange={setUsername}/>
-                                    <TextInput id="password" type="password" help="6 characters or more"
-                                               autoComplete="new-password"
-                                               value={password} onChange={setPassword}/>
-                                    <TextInput id="confirmPassword" type="password" value={confirmPassword} onChange={setConfirmPassword}/>
-                                </div>
-                            </div>
-                            <div className="pt-5 px-4 py-3 bg-gray-50 dark:bg-gray-900 text-right sm:px-6">
-                                <div className="flex justify-end">
-                                    { client.loading ? <FormLoading className="flex-1"/> : null }
-                                    <PrimaryButton className="ml-3">Sign Up</PrimaryButton>
-                                </div>
-                            </div>
-                        </div>
+                <section className="auth-card">
+                    <p className="eyebrow">Create an account</p>
+                    <h1>Keep your licenses in one place</h1>
+                    <p>An account holds your license files, orders and account settings. The software itself never needs it.</p>
+                    <form onSubmit={onSubmit}>
+                        <ErrorSummary except="displayName,userName,password,confirmPassword"/>
+                        <TextInput id="displayName" label="Name" help="Your first and last name" autoComplete="name"
+                                   value={displayName} onChange={setDisplayName}/>
+                        <TextInput id="userName" label="Email" autoComplete="email"
+                                   value={username} onChange={setUsername}/>
+                        <TextInput id="password" label="Password" type="password" help="6 characters or more"
+                                   autoComplete="new-password"
+                                   value={password} onChange={setPassword}/>
+                        <TextInput id="confirmPassword" label="Confirm password" type="password"
+                                   autoComplete="new-password"
+                                   value={confirmPassword} onChange={setConfirmPassword}/>
+                        {client.loading ? <FormLoading/> : null}
+                        <PrimaryButton>Create account</PrimaryButton>
                     </form>
+                    <p className="auth-footer">
+                        Already have one? <Link className="text-link" href="/signin">Sign in</Link>
+                    </p>
                 </section>
             </ApiStateContext.Provider>
 
-            <div className="flex mt-8 ml-8">
-                <h3 className="mr-4 leading-8 text-gray-500 dark:text-gray-400">Quick Links</h3>
-                <div className="flex flex-wrap max-w-lg gap-2">
-                    <SecondaryButton onClick={() => setUser('new@user.com')}>
-                        new@user.com
-                    </SecondaryButton>
+            <div className="auth-demo">
+                <p>Demo account</p>
+                <div>
+                    <button type="button" onClick={() => setUser('new@user.com')}>new@user.com</button>
                 </div>
             </div>
-        </>
+        </div>
     )
 }
 
 export default function SignUp() {
     return (
-        <Page title="Sign Up">
-            <Suspense fallback={<div>Loading...</div>}>
+        <Layout>
+            <Suspense fallback={<div className="auth-page"><div className="auth-card"><div className="skeleton" style={{height:300}}/></div></div>}>
                 <SignUpContent />
             </Suspense>
-        </Page>
+        </Layout>
     )
 }

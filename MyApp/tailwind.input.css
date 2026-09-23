@@ -421,3 +421,183 @@
 .dark .prose sup {
     color: #d1d5db; /* gray-300 */
 }
+
+/* =====================================================================
+   ACME STUDIO — shared identity for the Razor (Identity) pages
+   ---------------------------------------------------------------------
+   The Identity pages used to ship the stock blue/slate template look
+   while the React storefront used the Acme spruce/mint palette, so
+   signing in felt like leaving the product. These tokens mirror
+   MyApp.Client/styles/index.css; keep the two in step.
+   ===================================================================== */
+
+@theme {
+  /* The ServiceStack Razor + Vue components paint primary controls with
+     Tailwind's indigo ramp. Remapping the ramp retones them all at once. */
+  --color-indigo-50:  #f1f6ee;
+  --color-indigo-100: #e3eedb;
+  --color-indigo-200: #c9e0bb;
+  --color-indigo-300: #a6cb96;
+  --color-indigo-400: #6f9e72;
+  --color-indigo-500: #356b50;
+  --color-indigo-600: #27553f;
+  --color-indigo-700: #1d3a2c;
+  --color-indigo-800: #16261e;
+  --color-indigo-900: #0f1a15;
+  --color-indigo-950: #0a120e;
+}
+
+:root {
+  color-scheme: light;
+  --spruce-700: #1d3a2c;
+  --spruce-600: #27553f;
+  --spruce-500: #356b50;
+  --spruce-400: #5c8a6c;
+  --mint-400: #b2ea90;
+  --mint-300: #c7f4ab;
+
+  --bg: #fbfcfa;
+  --surface: #ffffff;
+  --surface-sunken: #f2f5ef;
+  --line: #e1e7e2;
+  --line-strong: #ccd6ce;
+  --ink: #14201d;
+  --ink-muted: #5c6b65;
+  --ink-subtle: #7d8c85;
+
+  --accent: #1d3a2c;
+  --accent-hover: #27553f;
+  --accent-ink: #eefbe2;
+  --accent-soft: #ecf4e6;
+  --accent-soft-ink: #31603e;
+  --focus: #2f7d5a;
+
+  --r-sm: 9px; --r-md: 12px; --r-lg: 16px; --r-pill: 999px;
+
+  --font-display: "Familjen Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.dark {
+  color-scheme: dark;
+  --bg: #0e1815;
+  --surface: #15211d;
+  --surface-sunken: #111c19;
+  --line: #26332e;
+  --line-strong: #35463f;
+  --ink: #e9f0ea;
+  --ink-muted: #9aaaa3;
+  --ink-subtle: #7b8a83;
+  --accent: var(--mint-300);
+  --accent-hover: #dcf8c9;
+  --accent-ink: #14261c;
+  --accent-soft: #1e2f24;
+  --accent-soft-ink: #bdddaa;
+  --focus: #7fd1a4;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; }
+
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+/* The stock form styles hardcode #2563eb; bring them onto the brand. */
+[type='text']:focus, [type='email']:focus, [type='url']:focus, [type='password']:focus,
+[type='number']:focus, [type='date']:focus, [type='datetime-local']:focus, [type='month']:focus,
+[type='week']:focus, [type='search']:focus, [type='tel']:focus, [type='time']:focus,
+[multiple]:focus, textarea:focus, select:focus {
+  --tw-ring-color: var(--focus);
+  border-color: var(--focus);
+}
+[type='checkbox'], [type='radio'] { color: var(--spruce-600); }
+[type='checkbox']:focus, [type='radio']:focus { --tw-ring-color: var(--focus); }
+.dark [type='checkbox'], .dark [type='radio'] { color: var(--spruce-500); background-color: var(--surface); border-color: var(--line-strong); }
+.dark [type='text'], .dark [type='email'], .dark [type='password'], .dark [type='number'],
+.dark [type='search'], .dark [type='tel'], .dark textarea, .dark select {
+  background-color: var(--surface);
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+/* --- Header ----------------------------------------------------------- */
+.acme-header {
+  position: sticky; top: 0; z-index: 40;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter: saturate(1.4) blur(12px);
+}
+.acme-nav {
+  max-width: 1280px; margin: auto; min-height: 72px;
+  padding: 10px clamp(1.25rem, 4vw, 2rem);
+  display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+}
+.acme-brand {
+  display: inline-flex; align-items: center; gap: 9px;
+  font-family: var(--font-display); font-size: 1.3rem; font-weight: 700;
+  letter-spacing: -0.04em; color: var(--ink); white-space: nowrap;
+}
+.acme-mark {
+  display: grid; place-items: center; width: 32px; height: 32px;
+  border-radius: var(--r-sm); background: var(--spruce-700); color: var(--mint-300);
+  font-size: 15px; font-weight: 600;
+}
+.dark .acme-mark { background: var(--mint-300); color: #16261e; }
+.acme-brand-light { font-weight: 400; color: var(--ink-subtle); margin-left: -3px; }
+
+.acme-nav-links { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; list-style: none; margin: 0; padding: 0; }
+.acme-nav-links a.acme-link {
+  display: inline-flex; align-items: center;
+  padding: 8px 12px; border-radius: var(--r-sm);
+  font-size: 0.8125rem; font-weight: 500; color: var(--ink-muted);
+}
+.acme-nav-links a.acme-link:hover { color: var(--ink); background: var(--surface-sunken); }
+.acme-nav-links a.acme-link[aria-current="page"] { color: var(--ink); font-weight: 600; }
+
+.acme-button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 9px 15px; border-radius: var(--r-sm);
+  border: 1px solid transparent;
+  font-size: 0.8125rem; font-weight: 600; white-space: nowrap; cursor: pointer;
+}
+.acme-button.primary { background: var(--accent); color: var(--accent-ink); }
+.acme-button.primary:hover { background: var(--accent-hover); }
+.acme-button.secondary { background: var(--surface); border-color: var(--line-strong); color: var(--ink); }
+.acme-button.secondary:hover { border-color: var(--accent); background: var(--surface-sunken); }
+
+.acme-user { display: inline-flex; align-items: center; gap: 9px; padding: 6px 10px; border-radius: var(--r-sm); font-size: 0.8125rem; color: var(--ink-muted); }
+.acme-user:hover { background: var(--surface-sunken); color: var(--ink); }
+.acme-user img { width: 26px; height: 26px; border-radius: 50%; }
+
+/* --- Footer ----------------------------------------------------------- */
+.acme-footer { border-top: 1px solid var(--line); background: var(--surface-sunken); margin-top: 4rem; }
+.acme-footer-inner {
+  max-width: 1280px; margin: auto;
+  padding: clamp(2rem, 5vw, 3rem) clamp(1.25rem, 4vw, 2rem) 1.5rem;
+  display: flex; justify-content: space-between; gap: 32px; flex-wrap: wrap;
+}
+.acme-footer p { font-size: 0.8125rem; color: var(--ink-muted); margin-top: 12px; max-width: 30ch; line-height: 1.8; }
+.acme-footer nav { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+.acme-footer nav a { font-size: 0.8125rem; color: var(--ink-muted); }
+.acme-footer nav a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.acme-footer-bottom {
+  max-width: 1280px; margin: auto;
+  padding: 18px clamp(1.25rem, 4vw, 2rem) 24px;
+  border-top: 1px solid var(--line);
+  font-size: 0.75rem; color: var(--ink-subtle);
+  display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+}
+
+/* --- Identity page body ----------------------------------------------- */
+.acme-main { max-width: 1120px; margin: auto; padding: clamp(2rem, 5vw, 3.5rem) clamp(1.25rem, 4vw, 2rem) 3rem; }
+.acme-main h1 { font-size: clamp(1.75rem, 3vw, 2.25rem); font-weight: 600; letter-spacing: -0.03em; }
+.acme-main h2 { font-weight: 600; letter-spacing: -0.02em; }
+.acme-main a:not([class]) { color: var(--accent-soft-ink); text-decoration: underline; text-underline-offset: 3px; }

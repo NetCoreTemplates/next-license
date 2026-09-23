@@ -1,5 +1,9 @@
 <Solution>
   <Project Path="MyApp.Client/MyApp.Client.esproj" />
+  <Project Path="MyApp.Licensing.Core/MyApp.Licensing.Core.csproj" />
+  <Project Path="MyApp.Licensing.Tool/MyApp.Licensing.Tool.csproj" />
+  <Project Path="MyApp.Licensing/MyApp.Licensing.csproj" />
+  <Project Path="MyApp.SampleApp/MyApp.SampleApp.csproj" />
   <Project Path="MyApp.ServiceInterface/MyApp.ServiceInterface.csproj" />
   <Project Path="MyApp.ServiceModel/MyApp.ServiceModel.csproj" />
   <Project Path="MyApp.Tests/MyApp.Tests.csproj" />

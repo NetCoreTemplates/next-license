@@ -10,7 +10,8 @@
 @await Html.PartialAsync("AlertError", "Deleting this data permanently removes your account, and cannot be recovered.")
 
 <div>
-    <form id="delete-user" method="post">
+    <p class="my-4">Download your license files and invoices before deleting your account. Account deletion removes your sign-in, activation history, preferences, and transfer access. License, payment, refund, and agreement evidence remains for commercial recordkeeping. Previously issued offline licenses remain usable.</p>
+<form id="delete-user" method="post">
         <div asp-validation-summary="ModelOnly" class="text-danger text-center font-semibold" role="alert"></div>
         @if (Model.RequirePassword)
         {

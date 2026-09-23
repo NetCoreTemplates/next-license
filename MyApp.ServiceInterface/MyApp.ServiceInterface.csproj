@@ -8,11 +8,13 @@
 
     <ItemGroup>
         <ProjectReference Include="..\MyApp.ServiceModel\MyApp.ServiceModel.csproj" />
+        <ProjectReference Include="..\MyApp.Licensing\MyApp.Licensing.csproj" />
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.*" />
         <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.*" />
+        <PackageReference Include="Stripe.net" Version="52.4.2" />
         <PackageReference Include="ServiceStack" Version="10.*" />
         <PackageReference Include="ServiceStack.Extensions" Version="10.*" />
         <PackageReference Include="ServiceStack.Ormlite" Version="10.*" />

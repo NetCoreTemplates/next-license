@@ -10,4 +10,8 @@
         <PackageReference Include="ServiceStack.Interfaces" Version="10.*" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\MyApp.Licensing.Core\MyApp.Licensing.Core.csproj" />
+    </ItemGroup>
+
 </Project>

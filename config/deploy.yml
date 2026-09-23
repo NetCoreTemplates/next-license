@@ -21,8 +21,9 @@ image: <%= ENV['IMAGE'] %>
 # Required for use of ASP.NET Core with Kamal-Proxy.
 env:
   clear:
+    ASPNETCORE_ENVIRONMENT: Production
     ASPNETCORE_FORWARDEDHEADERS_ENABLED: true
-  # secrets from ./kamal/secrets
+  # secrets from .kamal/secrets-common and .kamal/secrets.<destination>
   secret:
     - SERVICESTACK_LICENSE
     - APPSETTINGS_JSON_BASE64
@@ -62,14 +63,6 @@ builder:
 volumes:
   - "/opt/docker/<%= ENV['SERVICE'] %>/App_Data:/app/App_Data"
 
-#accessories:
-#  litestream:
-#    roles: ["web"]
-#    image: litestream/litestream
-#    files: ["config/litestream.yml:/etc/litestream.yml"]
-#    volumes: ["/opt/docker/MyApp/App_Data:/data"]
-#    cmd: replicate
-#    env:
-#      secret:
-#        - ACCESS_KEY_ID
-#        - SECRET_ACCESS_KEY
+# Select a database with -d sqlite|postgres|mysql|sqlserver. The Release workflow
+# uses the DB_PROVIDER repository variable (sqlite by default) for every command.
+# APPSETTINGS_JSON supplies the matching application connection string and secrets.

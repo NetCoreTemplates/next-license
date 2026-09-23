@@ -20,11 +20,14 @@ env:
   KAMAL_DEPLOY_HOST: ${{ secrets.KAMAL_DEPLOY_HOST }}
   KAMAL_REGISTRY_USERNAME: ${{ github.actor }}
   KAMAL_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+  DB_PROVIDER: ${{ vars.DB_PROVIDER || 'sqlite' }}
+  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+  MSSQL_PID: ${{ vars.MSSQL_PID || 'Express' }}
 
 jobs:
   release:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -73,51 +76,41 @@ jobs:
         with:
           driver-opts: image=moby/buildkit:master
 
+      - name: Validate database destination
+        run: |
+          case "$DB_PROVIDER" in sqlite|postgres|mysql|sqlserver) ;; *) echo 'Unsupported DB_PROVIDER' >&2; exit 1 ;; esac
+          test -f "config/deploy.$DB_PROVIDER.yml"
+          if [ "$DB_PROVIDER" != sqlite ]; then test -n "$DB_PASSWORD"; fi
+
       - name: Kamal bootstrap
         run: |
-          kamal server bootstrap
+          kamal server bootstrap -d "$DB_PROVIDER"
 
       - name: Ensure directories exist with correct permissions
         run: |
           echo "Creating directories with correct permissions"
-          kamal server exec "mkdir -p /opt/docker/${{ env.SERVICE }}/App_Data /opt/docker/${{ env.SERVICE }}/initdb.d"
+          kamal server exec -d "$DB_PROVIDER" "mkdir -p /opt/docker/${{ env.SERVICE }}/App_Data /opt/docker/${{ env.SERVICE }}/initdb.d"
 
           echo "Setting app file permissions"
-          kamal server exec "chown -R 1654:1654 /opt/docker/${{ env.SERVICE }}/App_Data /opt/docker/${{ env.SERVICE }}/initdb.d"
+          kamal server exec -d "$DB_PROVIDER" "chown -R 1654:1654 /opt/docker/${{ env.SERVICE }}/App_Data /opt/docker/${{ env.SERVICE }}/initdb.d"
 
-      - name: Check if first run and execute kamal app boot if necessary
+      - name: Database provider pre-deploy hook
         run: |
-          FIRST_RUN_FILE="~/first-run/${{ env.SERVICE }}"
-          if ! kamal server exec -q "test -f $FIRST_RUN_FILE"; then
-            kamal server exec -q "mkdir -p ~/first-run && touch $FIRST_RUN_FILE" || true
-
-            if [ -n "${{env.INIT_DB_SQL}}" ]; then
-              echo "Initializing DB with INIT_DB_SQL secret..."
-              # Save the SQL content to a temporary file
-              echo "${{ env.INIT_DB_SQL }}" > init-db.sql
-              cat init-db.sql | kamal server exec -i "cat > /opt/docker/${{ env.SERVICE }}/initdb.d/${{ env.SERVICE }}.sql" && rm init-db.sql || true
-            fi
-            # Start all kamal accessories
-            kamal accessory boot all || true
-
-            # Deploy latest version
-            kamal deploy -q -P --version latest || true
-          else
-            echo "Not first run, skipping kamal app boot"
-          fi
+          hook="config/db/$DB_PROVIDER/pre-deploy.sh"
+          if [ -x "$hook" ]; then "$hook"; fi
 
       - name: Verify file permissions before deploy
         run: |
-          kamal server exec --no-interactive "chown -R 1654:1654 /opt/docker/${{ env.SERVICE }}/App_Data /opt/docker/${{ env.SERVICE }}/initdb.d"
+          kamal server exec -d "$DB_PROVIDER" --no-interactive "chown -R 1654:1654 /opt/docker/${{ env.SERVICE }}/App_Data /opt/docker/${{ env.SERVICE }}/initdb.d"
 
       - name: Deploy with Kamal
         run: |
-          kamal lock release -v
-          kamal server exec --no-interactive 'echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin'
-          kamal server exec --no-interactive 'docker pull ${{ env.IMAGE }}:latest'
-          kamal deploy -P --version latest
+          kamal lock release -v -d "$DB_PROVIDER"
+          kamal server exec -d "$DB_PROVIDER" --no-interactive 'echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin'
+          kamal server exec -d "$DB_PROVIDER" --no-interactive 'docker pull ${{ env.IMAGE }}:latest'
+          kamal deploy -P -d "$DB_PROVIDER" --version latest
 
       - name: Migration
         if: env.HAS_MIGRATIONS == 'true'
         run: |
-          kamal app exec --no-reuse --no-interactive --version=latest "--AppTasks=migrate"
+          kamal app exec -d "$DB_PROVIDER" --no-reuse --no-interactive --version=latest "--AppTasks=migrate"

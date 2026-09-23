@@ -1,89 +1,84 @@
 'use client'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { ArrowUpRight, Command, Menu, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { appAuth } from '@/lib/auth'
+import ThemeToggle from './theme-toggle'
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useAuth, PrimaryButton, SecondaryButton, DarkModeToggle } from "@servicestack/react"
-import { appAuth } from "@/lib/auth"
-
-type NavItem = {
-    href?:string,
-    name:string,
-    type?:string,
-    show?:string,
-    hide?:string,
-    onClick?:() => void
-}
+const links = [
+  ['/features', 'Features'],
+  ['/pricing', 'Pricing'],
+  ['/download', 'Downloads'],
+  ['/docs', 'Docs'],
+]
 
 export default function Nav() {
-    const pathname = usePathname()
+  const pathname = usePathname()
+  const { user, hasRole, signOut } = appAuth()
+  const [open, setOpen] = useState(false)
 
-    const items:NavItem[] = [
-        { href: '/bookings-auto', name: 'Bookings'},
-    ]
+  // The menu closes when the route changes and on Escape, so it never
+  // covers the page someone just navigated to.
+  useEffect(() => setOpen(false), [pathname])
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open])
 
-    const { user, hasRole, signOut } = appAuth()
-    const navClass = (path:string) => [
-        "p-4 flex items-center justify-start mw-full hover:text-sky-500 dark:hover:text-sky-400",
-        pathname === path || pathname.startsWith(path + '/') ? "text-link-dark dark:text-link-dark" : "",
-    ].join(" ")
+  const current = (href: string) => pathname === href || pathname.startsWith(href + '/') ? 'page' as const : undefined
 
-    return (<header className="border-b border-gray-200 dark:border-gray-700 pr-3 bg-white dark:bg-gray-800">
-        <div className="flex flex-wrap items-center">
-            <div className="flex-shrink flex-grow-0">
-                <Link href="/">
-                    <div className="p-4 cursor-pointer"><img className="w-8 h-8" src="/assets/img/logo.svg" alt="MyApp logo" /></div>
-                </Link>
-            </div>
-            <div className="flex flex-grow flex-shrink flex-nowrap justify-end items-center">
-                <nav className="relative flex flex-grow">
-                    <ul className="flex flex-wrap items-center justify-end w-full m-0">
-                    {items.map(x => {
-                        const isActive = pathname === x.href || pathname.startsWith(x.href + '/')
-                        return (<li key={x.name} className="relative flex flex-wrap just-fu-start m-0">{x.type === 'Button'
-                            ? <SecondaryButton className="m-2" href={x.href} onClick={x.onClick}>{x.name}</SecondaryButton>
-                            : x.type == 'PrimaryButton'
-                                ? <PrimaryButton className="m-2" href={x.href} onClick={x.onClick}>{x.name}</PrimaryButton>
-                                : (<Link href={x.href!} className={`flex items-center justify-start mw-full p-4 text-gray-700 dark:text-gray-200 hover:text-success transition-colors${isActive ? ' text-success font-semibold': ''}`}>
-                                    {x.name}
-                                   </Link>)}
-                            </li>)
-                    })}
-                        {user
-                            ? (<>
-                                <li>
-                                    <div className="mx-3 relative">
-                                        <div>
-                                            <a href="/Identity/Account/Manage"
-                                                  className="max-w-xs rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 lg:p-2 lg:rounded-md lg:hover:bg-gray-50 dark:lg:hover:bg-gray-900 dark:ring-offset-black"
-                                                  id="user-menu-button" aria-expanded="false" aria-haspopup="true">
-                                                <img className="h-8 w-8 rounded-full" src={user.profileUrl} alt=""/>
-                                                <span
-                                                    className="hidden ml-3 text-gray-700 dark:text-gray-300 text-sm font-medium lg:block">
-                                                <span className="sr-only">Open user menu for </span>
-                                                    {user.userName}
-                                                </span>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li className="mr-3 relative flex flex-wrap just-fu-start m-0">
-                                    <SecondaryButton onClick={() => signOut()}>
-                                        Sign Out
-                                    </SecondaryButton>
-                                </li>
-                            </>)
-                            : (<li className="relative flex flex-wrap just-fu-start m-0">
-                                <SecondaryButton href="/signin" className="m-2">
-                                    Sign In
-                                </SecondaryButton>
-                            </li>)
-                        }
-                        <li className="relative flex flex-wrap just-fu-start m-0">
-                            <DarkModeToggle />
-                        </li>
-                    </ul>
-                </nav>
-            </div>
+  return (
+    <header className="studio-header">
+      <div className="studio-nav">
+        <Link href="/" className="studio-brand" aria-label="Acme Studio home">
+          <span className="studio-mark"><Command size={18}/></span>
+          acme<span className="brand-light">studio</span><span className="brand-dot"/>
+        </Link>
+
+        <nav className="desktop-links" aria-label="Main">
+          {links.map(([href, title]) => (
+            <Link key={href} href={href} aria-current={current(href)}>{title}</Link>
+          ))}
+        </nav>
+
+        <div className="nav-actions">
+          <ThemeToggle/>
+          {hasRole('Admin') && (
+            <Link href="/admin" className="desktop-only studio-button ghost" aria-current={current('/admin')}>Operations</Link>
+          )}
+          {user && (
+            <button className="desktop-only studio-button ghost" onClick={() => signOut('/')}>Sign out</button>
+          )}
+          <Link href={user ? '/account' : '/signin'} className="nav-account" aria-current={current('/account')}>
+            {user ? 'My licenses' : 'Sign in'}<ArrowUpRight size={14}/>
+          </Link>
+          <button
+            className="mobile-toggle"
+            onClick={() => setOpen(!open)}
+            aria-label={open ? 'Close menu' : 'Open menu'}
+            aria-expanded={open}
+            aria-controls="mobile-menu"
+          >
+            {open ? <X size={20}/> : <Menu size={20}/>}
+          </button>
         </div>
-    </header>)
+      </div>
+
+      {open && (
+        <nav className="mobile-links" id="mobile-menu" aria-label="Mobile">
+          {links.map(([href, title]) => (
+            <Link key={href} href={href} aria-current={current(href)}>{title}</Link>
+          ))}
+          <Link href={user ? '/account' : '/signin'} aria-current={current('/account')}>
+            {user ? 'My licenses' : 'Sign in'}<ArrowUpRight size={15}/>
+          </Link>
+          {hasRole('Admin') && <Link href="/admin" aria-current={current('/admin')}>Operations</Link>}
+          {user && <button onClick={() => signOut('/')}>Sign out</button>}
+        </nav>
+      )}
+    </header>
+  )
 }

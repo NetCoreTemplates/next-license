@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using MyApp.Data;
+using MyApp.ServiceInterface;
 
 namespace MyApp.Areas.Identity.Pages.Account.Manage
 {
@@ -18,15 +19,17 @@ namespace MyApp.Areas.Identity.Pages.Account.Manage
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<DeletePersonalDataModel> _logger;
+        private readonly LicenseAccountDeletion _licenseDeletion;
 
         public DeletePersonalDataModel(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
-            ILogger<DeletePersonalDataModel> logger)
+            ILogger<DeletePersonalDataModel> logger, LicenseAccountDeletion licenseDeletion)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
+            _licenseDeletion = licenseDeletion;
         }
 
         /// <summary>
@@ -94,6 +97,7 @@ namespace MyApp.Areas.Identity.Pages.Account.Manage
                 throw new InvalidOperationException($"Unexpected error occurred deleting user.");
             }
 
+            _licenseDeletion.RemovePersonalAccess(userId);
             await _signInManager.SignOutAsync();
 
             _logger.LogInformation("User with ID '{UserId}' deleted themselves.", userId);

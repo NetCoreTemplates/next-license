@@ -1,3 +1,19 @@
+# Licensing template guidance
+
+This repository implements simple ES256 JWT licensing for Acme Studio. PLAN.md is a superseded feature-catalog design. The sections below inherited from next-static describe infrastructure; Booking/Vite examples are historical, not the current product. The client uses Next.js static export, not Vite.
+
+- Read docs/licensing/STATUS.md before making completion or production-readiness claims.
+- Paid access must remain clock-free and offline. Compare the embedded build date against signed JWT update coverage only. No seat enforcement or recurring billing.
+- The server signs JWTs with its configured private P-256 key; apps embed only the public key. Do not log refresh keys, license blobs, private keys or webhook bodies.
+- Preserve immutable release dates and settlement evidence. Fix published mistakes by yanking and releasing a new version.
+- Stripe owns promotion eligibility, tax, payment and refunds. Snapshot checkout policy before redirect and verify fresh provider evidence before fulfillment.
+- The template is unpublished: keep one OrmLite baseline and recreate disposable development databases as needed. After release, never modify a deployed migration. Identity alone uses EF Core. See docs/licensing/TABLE-REVIEW.md before adding tables; no triggers, release catalog or activation telemetry.
+- After changing DTOs: build and restart the backend, regenerate MyApp.Client/lib/dtos.ts from /types/typescript?MakePropertiesOptional=true, then run client typecheck, tests and production export.
+- Verify with dotnet test MyApp.Tests, dotnet build MyApp.SampleApp, and npm run build/typecheck/test:run in MyApp.Client. External Stripe/GitHub acceptance requires an explicitly configured test environment.
+- The default sample CLI uses disposable demonstration keys. Shipping builds embed the real public key and immutable build date. Keep demo credentials out of shipping artifacts.
+
+---
+
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) and other Agents when working with code in this repository.
@@ -150,9 +166,11 @@ config/
 
 Both use the same SQLite database by default (`App_Data/app.db`). Connection string in `appsettings.json`.
 
+**SQLite connection strings:** Always use `DataSource=` with no space, never `Data Source=`. Use a complete connection string such as `DataSource=App_Data/app.db;Cache=Shared`, including for temporary databases and tests. In this template, an incorrectly formatted value can be interpreted as a file path and create stray directories such as `MyApp/Data Source=/tmp`. Apply this convention consistently to EF Core and OrmLite configuration.
+
 **Migration Files:**
 - `MyApp/Migrations/20240301000000_CreateIdentitySchema.cs` - EF Core migration for Identity
-- `MyApp/Migrations/Migration1000.cs` - OrmLite migration for app tables (e.g., Booking)
+- `MyApp/Migrations/Migration1000.cs` - OrmLite baseline for all licensing tables and reference data
 
 Run `npm run migrate` to execute both.
 

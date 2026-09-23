@@ -6,6 +6,24 @@ using MyApp.ServiceInterface;
 
 AppHost.RegisterKey();
 
+// Local developer secrets; process environment takes precedence. Never log values.
+foreach (var envPath in new[] { Path.Combine(Directory.GetCurrentDirectory(), "..", ".env"), Path.Combine(Directory.GetCurrentDirectory(), ".env") })
+    if (File.Exists(envPath)) foreach (var line in File.ReadLines(envPath)) {
+        var text = line.Trim();
+        if (text.Length == 0 || text.StartsWith('#')) continue;
+        var split = text.IndexOf('=');
+        if (split < 1) continue;
+        var key = text[..split].Trim();
+        if (key.StartsWith("export ")) key = key[7..].Trim();
+        if (Environment.GetEnvironmentVariable(key) == null)
+            Environment.SetEnvironmentVariable(key, text[(split + 1)..].Trim().Trim('"', '\''));
+    }
+var runtimeSettings = Environment.GetEnvironmentVariable("APPSETTINGS_JSON_BASE64");
+if (!string.IsNullOrWhiteSpace(runtimeSettings))
+{
+    using var document = System.Text.Json.JsonDocument.Parse(Convert.FromBase64String(runtimeSettings));
+    ApplySettings(document.RootElement, "");
+}
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
 
@@ -29,7 +47,10 @@ services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfi
 
 services.AddRazorPages();
 
-services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+if (builder.Configuration.GetSection("SmtpConfig").Exists())
+    services.AddSingleton<IEmailSender<ApplicationUser>, EmailSender>();
+else
+    services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 // Uncomment to send emails with SMTP, configure SMTP with "SmtpConfig" in appsettings.json
 // services.AddSingleton<IEmailSender<ApplicationUser>, EmailSender>();
 services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, AdditionalUserClaimsPrincipalFactory>();
@@ -38,7 +59,7 @@ services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, AdditionalUserC
 services.AddServiceStack(typeof(MyServices).Assembly);
 
 var app = builder.Build();
-var nodeProxy = new NodeProxy("http://127.0.0.1:3000") {
+var nodeProxy = new NodeProxy(Environment.GetEnvironmentVariable("NEXT_DEV_SERVER_URL") ?? "http://127.0.0.1:3000") {
     Log = app.Logger
 };
 
@@ -83,3 +104,18 @@ else
 }
 
 app.Run();
+
+// Preserve explicit process environment overrides, including deployment destinations.
+static void ApplySettings(System.Text.Json.JsonElement value, string path)
+{
+    if (value.ValueKind == System.Text.Json.JsonValueKind.Object)
+        foreach (var property in value.EnumerateObject())
+            ApplySettings(property.Value, path.Length == 0 ? property.Name : path + "__" + property.Name);
+    else if (value.ValueKind == System.Text.Json.JsonValueKind.Array)
+    {
+        var i = 0;
+        foreach (var item in value.EnumerateArray()) ApplySettings(item, path + "__" + i++);
+    }
+    else if (value.ValueKind != System.Text.Json.JsonValueKind.Null && Environment.GetEnvironmentVariable(path) == null)
+        Environment.SetEnvironmentVariable(path, value.ToString());
+}

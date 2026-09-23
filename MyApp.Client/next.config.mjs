@@ -16,6 +16,8 @@ const API_URL = isProd ? DEPLOY_API : (buildLocal ? '' : target)
  * @type {import('next').NextConfig}
  **/
 const nextConfig = {
+    devIndicators: false,
+
     // Configure pageExtensions to include MDX files
     pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
 
@@ -23,7 +25,7 @@ const nextConfig = {
     output: isProd ? 'export' : undefined,
 
     // Change output directory from 'out' to 'dist'
-    distDir: 'dist',
+    distDir: isProd ? 'dist' : (process.env.NEXT_DEV_DIST_DIR ?? '.next-dev'),
 
     // Images are served unoptimized; adjust if you later add an image optimizer/CDN
     images: {
