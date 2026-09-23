@@ -22,7 +22,7 @@ public class ConfigureLicenseSecurity : IHostingStartup
         services.AddTransient<IStartupFilter, LicenseSecurityFilter>();
     });
 }
-public class LicenseSecurityFilter(IHostEnvironment environment) : IStartupFilter
+public class LicenseSecurityFilter(IHostEnvironment environment, IConfiguration configuration) : IStartupFilter
 {
     public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next) => app => {
         app.Use(async (context, continuation) => {
@@ -47,8 +47,7 @@ public class LicenseSecurityFilter(IHostEnvironment environment) : IStartupFilte
             if (mutation && request.Headers.ContainsKey("Cookie") && !exempt && !path.StartsWithSegments("/Identity"))
             {
                 var source = request.Headers.Origin.FirstOrDefault() ?? request.Headers.Referer.FirstOrDefault();
-                if (!Uri.TryCreate(source, UriKind.Absolute, out var origin) || origin.Scheme != request.Scheme
-                    || !string.Equals(origin.Authority, request.Host.Value, StringComparison.OrdinalIgnoreCase))
+                if (!IsSameOrigin(request, source, configuration["AppConfig:BaseUrl"]))
                 {
                     context.Response.StatusCode = 403;
                     await context.Response.WriteAsJsonAsync(new { responseStatus = new { errorCode = "CsrfValidationFailed", message = "A same-origin request is required." } });
@@ -59,4 +58,15 @@ public class LicenseSecurityFilter(IHostEnvironment environment) : IStartupFilte
         });
         app.UseRateLimiter(); next(app);
     };
+
+    public static bool IsSameOrigin(HttpRequest request, string? source, string? publicBaseUrl)
+    {
+        if (!Uri.TryCreate(source, UriKind.Absolute, out var origin)) return false;
+        var scheme = request.Scheme;
+        if (Uri.TryCreate(publicBaseUrl, UriKind.Absolute, out var publicOrigin)
+            && string.Equals(publicOrigin.Authority, request.Host.Value, StringComparison.OrdinalIgnoreCase))
+            scheme = publicOrigin.Scheme;
+        return string.Equals(origin.Scheme, scheme, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(origin.Authority, request.Host.Value, StringComparison.OrdinalIgnoreCase);
+    }
 }
