@@ -13,6 +13,7 @@ public sealed class LicensingConfig
     public string? LicensePrivateKeyPath { get; set; }
     public string LicenseIssuer { get; set; } = "acme-studio";
     public string? ShortKeySalt { get; set; }
+    public bool GeneratePreviewKeys { get; set; }
     public int RenewalDiscountGraceDays { get; set; } = 60;
     public string? GitHubRepository { get; set; }
     public bool NagLapsedUpdates { get; set; }

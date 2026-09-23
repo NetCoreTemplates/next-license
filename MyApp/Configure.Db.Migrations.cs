@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using MyApp.Data;
 using MyApp.Migrations;
+using MyApp.ServiceInterface;
 using ServiceStack;
 using ServiceStack.Data;
 using ServiceStack.OrmLite;
@@ -62,8 +63,12 @@ public class ConfigureDbMigrations : IHostingStartup
                     RequireSuccess(users.AddToRoleAsync(user, "Admin").GetAwaiter().GetResult());
             });
             AppTasks.Register("seed-example-data", _ => {
-                if (!appHost.GetApplicationServices().GetRequiredService<IHostEnvironment>().IsDevelopment())
-                    throw new InvalidOperationException("Example data can only be seeded in the Development environment.");
+                var services = appHost.GetApplicationServices();
+                if (!services.GetRequiredService<IHostEnvironment>().IsDevelopment()
+                    && (!string.Equals(Environment.GetEnvironmentVariable("ALLOW_EXAMPLE_DATA_SEEDING"), "true", StringComparison.OrdinalIgnoreCase)
+                        || ConfigureDb.NormalizeProvider(services.GetRequiredService<IConfiguration>()["Database:Provider"]) != "sqlite"
+                        || !string.IsNullOrWhiteSpace(services.GetRequiredService<LicenseStripeConfig>().SecretKey)))
+                    throw new InvalidOperationException("Production example data requires an explicit one-time flag, SQLite, and disabled Stripe checkout.");
                 RunMigrations();
                 ExampleDataSeeder.Seed(appHost);
             });

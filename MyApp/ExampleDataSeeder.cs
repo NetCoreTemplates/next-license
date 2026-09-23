@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Data.Sqlite;
 using MyApp.Data;
 using MyApp.Licensing.Core;
 using MyApp.ServiceInterface;
@@ -9,7 +10,7 @@ using ServiceStack.OrmLite;
 
 namespace MyApp;
 
-/// <summary>Creates clearly marked local example fixtures on an empty Development database.</summary>
+/// <summary>Creates clearly marked example fixtures on an empty demo database.</summary>
 public static class ExampleDataSeeder
 {
     private const string DemoPrefix = "DEMO-";
@@ -26,9 +27,9 @@ public static class ExampleDataSeeder
             return;
         }
         if (db.Count<LicenseOrder>() != 0 || db.Count<SoftwareLicense>() != 0)
-            throw new InvalidOperationException("Example-data seed requires a database with no orders or licenses. Use a fresh Development database.");
-        using var tx = db.OpenTransaction();
-
+            throw new InvalidOperationException("Example-data seed requires a database with no orders or licenses. Use a fresh disposable database.");
+        if (!appHost.GetApplicationServices().GetRequiredService<IHostEnvironment>().IsDevelopment())
+            BackupPreviewDatabase(appHost);
         using var scope = appHost.GetApplicationServices().GetRequiredService<IServiceScopeFactory>().CreateScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var signing = appHost.GetApplicationServices().GetRequiredService<LicenseSigning>();
@@ -41,7 +42,13 @@ public static class ExampleDataSeeder
             new DemoCustomer("jamie.chen@example.test", "Jamie Chen", "Northstar Labs"),
             new DemoCustomer("riley.patel@example.test", "Riley Patel", null),
         };
-        var users = customers.Select(x => EnsureUser(userManager, x)).ToArray();
+        var demoPassword = appHost.GetApplicationServices().GetRequiredService<IHostEnvironment>().IsDevelopment()
+            ? "Demo-Only-Change-Me!42"
+            : Environment.GetEnvironmentVariable("EXAMPLE_DATA_PASSWORD");
+        if (string.IsNullOrWhiteSpace(demoPassword))
+            throw new InvalidOperationException("Set EXAMPLE_DATA_PASSWORD when seeding a hosted preview.");
+        var users = customers.Select(x => EnsureUser(userManager, x, demoPassword)).ToArray();
+        using var tx = db.OpenTransaction();
 
         if (!db.Exists<LicenseAgreement>(x => x.Version == AgreementVersion))
             db.Insert(new LicenseAgreement {
@@ -85,14 +92,42 @@ public static class ExampleDataSeeder
 
         tx.Commit();
         Console.WriteLine("Example fixtures created: 3 demo customers, 3 demo orders, 2 signed demo licenses.");
-        Console.WriteLine("Demo customer sign-in: alex.morgan@example.test / Demo-Only-Change-Me!42");
-        Console.WriteLine("Demo customer sign-in: jamie.chen@example.test / Demo-Only-Change-Me!42");
-        Console.WriteLine("Demo customer sign-in: riley.patel@example.test / Demo-Only-Change-Me!42");
-        Console.WriteLine("Admin sign-in uses the existing Development account: admin@email.com / p@55wOrd");
+        if (appHost.GetApplicationServices().GetRequiredService<IHostEnvironment>().IsDevelopment())
+        {
+            Console.WriteLine("Demo customer sign-in: alex.morgan@example.test / Demo-Only-Change-Me!42");
+            Console.WriteLine("Demo customer sign-in: jamie.chen@example.test / Demo-Only-Change-Me!42");
+            Console.WriteLine("Demo customer sign-in: riley.patel@example.test / Demo-Only-Change-Me!42");
+            Console.WriteLine("Admin sign-in uses the existing Development account: admin@email.com / p@55wOrd");
+        }
         Console.WriteLine("Paid sample orders are local fixtures with no Stripe IDs; paid prices remain unapproved.");
     }
 
-    private static ApplicationUser EnsureUser(UserManager<ApplicationUser> manager, DemoCustomer customer)
+    private static void BackupPreviewDatabase(IAppHost appHost)
+    {
+        var services = appHost.GetApplicationServices();
+        var connection = services.GetRequiredService<IConfiguration>().GetConnectionString("DefaultConnection")
+            ?? "DataSource=App_Data/app.db;Cache=Shared";
+        var sourcePath = Path.GetFullPath(new SqliteConnectionStringBuilder(connection).DataSource,
+            services.GetRequiredService<IHostEnvironment>().ContentRootPath);
+        var backupPath = sourcePath + ".before-example-data-" + DateTime.UtcNow.ToString("yyyyMMddHHmmss") + ".bak";
+        if (!OperatingSystem.IsWindows())
+        {
+            using var emptyBackup = new FileStream(backupPath, new FileStreamOptions {
+                Mode = FileMode.CreateNew, Access = FileAccess.Write,
+                UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite,
+            });
+        }
+        using (var source = new SqliteConnection($"DataSource={sourcePath}"))
+        using (var backup = new SqliteConnection($"DataSource={backupPath}"))
+        {
+            source.Open();
+            backup.Open();
+            source.BackupDatabase(backup);
+        }
+        Console.WriteLine("Created a SQLite backup before adding example data.");
+    }
+
+    private static ApplicationUser EnsureUser(UserManager<ApplicationUser> manager, DemoCustomer customer, string password)
     {
         var user = manager.FindByEmailAsync(customer.Email).GetAwaiter().GetResult();
         if (user != null) return user;
@@ -102,7 +137,7 @@ public static class ExampleDataSeeder
             DisplayName = customer.Name, FirstName = customer.Name.Split(' ')[0],
             LastName = customer.Name.Split(' ').Last(),
         };
-        var result = manager.CreateAsync(user, "Demo-Only-Change-Me!42").GetAwaiter().GetResult();
+        var result = manager.CreateAsync(user, password).GetAwaiter().GetResult();
         if (!result.Succeeded) throw new InvalidOperationException(string.Join("; ", result.Errors.Select(x => x.Description)));
         return user;
     }
