@@ -10,8 +10,10 @@ public class ConfigureLicensing : IHostingStartup
         context.Configuration.GetSection("Stripe").Bind(stripe);
         if (licensing.GeneratePreviewKeys)
         {
-            if (!string.IsNullOrWhiteSpace(stripe.SecretKey))
-                throw new InvalidOperationException("Preview signing keys require Stripe checkout to be disabled.");
+            if (stripe.LiveMode || (!string.IsNullOrWhiteSpace(stripe.SecretKey)
+                && !stripe.SecretKey.StartsWith("sk_test_", StringComparison.Ordinal)
+                && !stripe.SecretKey.StartsWith("rk_test_", StringComparison.Ordinal)))
+                throw new InvalidOperationException("Preview signing keys cannot be used with live Stripe checkout.");
             var keyDirectory = Path.Combine(context.HostingEnvironment.ContentRootPath, "App_Data", "preview-license-keys");
             Directory.CreateDirectory(keyDirectory);
             if (!OperatingSystem.IsWindows()) File.SetUnixFileMode(keyDirectory, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
