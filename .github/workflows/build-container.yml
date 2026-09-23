@@ -15,12 +15,11 @@ on:
 # Only update envs here if you need to change them for this workflow
 env:
   DOCKER_BUILDKIT: 1
-  KAMAL_DEPLOY_HOST: ${{ secrets.KAMAL_DEPLOY_HOST }}
 
 jobs:
   build-container:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -33,26 +32,11 @@ jobs:
           # Set SERVICE: derive from repo name (replace dots with dashes)
           echo "SERVICE=$(echo $repo_name | tr '[:upper:]' '[:lower:]' | tr '.' '-')" >> $GITHUB_ENV
 
-          # Set KAMAL_DEPLOY_HOST: use secret if available, otherwise use repository name
-          if [ -n "${{ secrets.KAMAL_DEPLOY_HOST }}" ]; then
-            DEPLOY_HOST="${{ secrets.KAMAL_DEPLOY_HOST }}"
-          else
-            DEPLOY_HOST="$repo_name"
-          fi
-
-          # Validate KAMAL_DEPLOY_HOST contains at least one '.'
-          if [[ ! "$DEPLOY_HOST" == *.* ]]; then
-            echo "Error: KAMAL_DEPLOY_HOST must contain a hostname, e.g. example.com (got: $DEPLOY_HOST)"
-            exit 1
-          fi
-
-          echo "KAMAL_DEPLOY_HOST=$DEPLOY_HOST" >> $GITHUB_ENV
-
       # This step is for the deployment of the templates only, safe to delete
       - name: Modify csproj for template deploy
-        env: 
-          KAMAL_DEPLOY_IP: ${{ secrets.KAMAL_DEPLOY_IP }}
         if: env.KAMAL_DEPLOY_IP != null
+        env:
+          KAMAL_DEPLOY_IP: ${{ secrets.KAMAL_DEPLOY_IP }}
         run: |
           sed -i 's#<ContainerLabel Include="service" Value="my-app" />#<ContainerLabel Include="service" Value="${{ env.SERVICE }}" />#g' MyApp/MyApp.csproj
 
@@ -94,12 +78,8 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Build and push Docker image
-        env:
-          SERVICESTACK_LICENSE: ${{ secrets.SERVICESTACK_LICENSE }}
-          KAMAL_DEPLOY_HOST: ${{ secrets.KAMAL_DEPLOY_HOST }}
         run: |
           dotnet publish --os linux --arch x64 -c Release \
             -p:ContainerRepository=${{ env.IMAGE }} \
             -p:ContainerRegistry=ghcr.io -p:ContainerImageTags=latest \
-            -p:ContainerPort=80 \
-            -p:ContainerEnvironmentVariable="SERVICESTACK_LICENSE=${{ env.SERVICESTACK_LICENSE }}"
+            -p:ContainerPort=80
