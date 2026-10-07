@@ -83,8 +83,13 @@ public class ConfigureDb : IHostingStartup
             connection = "DataSource=App_Data/app.db;Cache=Shared";
         }
         connection = NormalizeConnection(provider, connection);
+        // Retry deadlocks, throttling and lost connections on PostgreSQL, SQL Server and MySQL (SQLite isn't retried)
+        OrmLiteConfig.RetryPolicy = OrmLiteRetry.Exponential(maxRetries: 3);
         services.AddSingleton<IDbConnectionFactory>(new OrmLiteConnectionFactory(connection, Dialect(provider)));
         services.AddDbContext<ApplicationDbContext>(options => ConfigureIdentity(options, provider, connection));
-        services.AddPlugin(new AdminDatabaseFeature());
+        services.AddPlugin(new AdminDatabaseFeature {
+            // Log differences between data models and their tables on startup
+            LogSchemaDiff = context.HostingEnvironment.IsDevelopment(),
+        });
     });
 }
