@@ -13,6 +13,12 @@ const formatter = new Intl.NumberFormat('en-US', {
 export const formatCurrency = (n?:number) => n ? formatter.format(n) : ''
 export const formatDate = (s?:string) => s ? toDateFmt(s) : ''
 
+// Read a text field, missing or file fields are '' (String(form.get()) would give "null")
+export function formText(form: FormData, name: string) {
+    const value = form.get(name)
+    return typeof value === 'string' ? value : ''
+}
+
 export const dateInputFormat = (d:Date) => dateFmt(d).replace(/\//g,'-')
 
 export function sanitizeForUi(dto:any) {

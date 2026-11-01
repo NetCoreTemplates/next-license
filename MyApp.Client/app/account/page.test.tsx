@@ -1,5 +1,5 @@
 import { render, screen, cleanup } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test'
 import type { ReactNode } from 'react'
 import Licenses from './page'
 const mocks = vi.hoisted(() => ({ api: vi.fn() }))

@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { formatCurrency, formatDate, dateInputFormat } from './utils'
+import { describe, it, expect } from 'vite-plus/test'
+import { formatCurrency, dateInputFormat, formText } from './utils'
 
 describe('utils', () => {
   describe('formatCurrency', () => {
@@ -22,5 +22,15 @@ describe('utils', () => {
       expect(result).toMatch(/\d{1,4}-\d{1,2}-\d{1,4}/)
     })
   })
-})
 
+  describe('formText', () => {
+    it('should read text fields and default missing or file fields to empty', () => {
+      const form = new FormData()
+      form.set('name', 'Acme')
+      form.set('upload', new Blob(['x']), 'x.txt')
+      expect(formText(form, 'name')).toBe('Acme')
+      expect(formText(form, 'missing')).toBe('')
+      expect(formText(form, 'upload')).toBe('')
+    })
+  })
+})

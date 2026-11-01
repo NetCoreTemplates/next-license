@@ -1,4 +1,4 @@
-import { JsonServiceClient, combinePaths } from "@servicestack/client"
+import { JsonServiceClient } from "@servicestack/client"
 import { Authenticate } from "@/lib/dtos"
 
 export const Routes = {
@@ -26,6 +26,7 @@ export async function init() {
     if (typeof window === 'undefined') return
 
     const { useMetadata, authContext } = await import("@servicestack/react")
+    // oxlint-disable-next-line react/rules-of-hooks -- useMetadata is a factory, not a React hook
     const metadata = useMetadata(client)
     const authCtx = authContext()
     console.log('init()', BaseUrl, process.env.INTERNAL_API_URL, process.env.apiBaseUrl)

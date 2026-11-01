@@ -5,7 +5,7 @@ import {
   waitFor,
   fireEvent,
 } from "@testing-library/react";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import type { ReactNode } from "react";
 import Pricing from "./page";
 const mocks = vi.hoisted(() => ({

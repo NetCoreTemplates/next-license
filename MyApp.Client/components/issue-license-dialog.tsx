@@ -2,6 +2,7 @@
 import { useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Search, X } from "lucide-react";
 import { client } from "@/lib/gateway";
+import { formText } from "@/lib/utils";
 import {
   SearchLicenseCustomers,
   LicenseCustomer,
@@ -135,9 +136,9 @@ export default function IssueLicenseDialog({
               const a = await client.api(
                 new IssueLicense({
                   userId: customer.id,
-                  licenseeName: String(form.get("name")),
+                  licenseeName: formText(form, "name"),
                   licenseeOrganization:
-                    String(form.get("organization")) || undefined,
+                    formText(form, "organization") || undefined,
                   seats: Number(form.get("seats")),
                   edition: Edition.Pro,
                   updateMode: lifetime
@@ -146,7 +147,7 @@ export default function IssueLicenseDialog({
                   updatesThroughUtc: lifetime
                     ? undefined
                     : new Date(
-                        String(form.get("through")) + "T23:59:59Z",
+                        formText(form, "through") + "T23:59:59Z",
                       ).toISOString(),
                 }),
               );

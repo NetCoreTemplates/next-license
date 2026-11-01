@@ -164,6 +164,7 @@ export default function AccountSettings() {
               Download your license files before deleting your account. Identity and activation data are removed;
               the minimum commercial evidence is kept.
             </p>
+            {/* oxlint-disable-next-line nextjs/no-html-link-for-pages -- ASP.NET Core Identity Razor Page */}
             <a className="text-link" href="/Identity/Account/Manage/PersonalData">
               Manage personal data <ArrowUpRight size={15}/>
             </a>

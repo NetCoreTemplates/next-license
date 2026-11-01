@@ -8,14 +8,15 @@ import {
   Check,
   Download,
   ExternalLink,
-  Github,
   KeyRound,
   Plus,
   Search,
   ShieldCheck,
   X,
 } from "lucide-react";
+import { Github } from "@/components/github-icon";
 import { client } from "@/lib/gateway";
+import { formText } from "@/lib/utils";
 import * as D from "@/lib/dtos";
 import { downloadableBuilds, platformLabel } from "@/lib/software-downloads";
 import IssueLicenseDialog from "./issue-license-dialog";
@@ -356,7 +357,7 @@ export default function SoftwareOperations({ section }: { section: Section }) {
                             unitAmountCents: Math.round(
                               Number(f.get("amount")) * 100,
                             ),
-                            currency: String(f.get("currency")).toLowerCase(),
+                            currency: formText(f, "currency").toLowerCase(),
                           }),
                         );
                         if (a.succeeded) {
@@ -449,8 +450,8 @@ export default function SoftwareOperations({ section }: { section: Section }) {
                     setBusy(true);
                     const a = await client.api(
                       new D.PublishLicenseAgreement({
-                        version: String(f.get("version")),
-                        bodyMarkdown: String(f.get("body")),
+                        version: formText(f, "version"),
+                        bodyMarkdown: formText(f, "body"),
                       }),
                     );
                     if (a.succeeded) {

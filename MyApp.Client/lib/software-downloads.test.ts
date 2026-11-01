@@ -1,4 +1,4 @@
-import { expect, it } from "vitest";
+import { expect, it } from 'vite-plus/test';
 import { detectPlatform, downloadableBuilds, packageLabel, platformLabel } from "./software-downloads";
 it("offers installable builds instead of updater metadata", () => {
   const assets = [

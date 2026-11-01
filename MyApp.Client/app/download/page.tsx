@@ -1,11 +1,12 @@
 "use client"
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { Apple, Download as DownloadIcon, Github, Monitor, Terminal } from "lucide-react"
+import { Apple, Download as DownloadIcon, Monitor, Terminal } from "lucide-react"
 import { client } from "@/lib/gateway"
 import { GetGitHubDownloads, GitHubDownloadsResponse } from "@/lib/dtos"
 import { detectPlatform, downloadableBuilds, packageLabel, platformLabel } from "@/lib/software-downloads"
 import ReleaseNotes from "@/components/release-notes"
+import { Github } from "@/components/github-icon"
 import Layout from "@/components/layout"
 import { PageHeader, EmptyState, SkeletonCard, Alert, formatUtcDate } from "@/components/page-parts"
 

@@ -56,6 +56,7 @@ export default function OperationsShell({ children }: { children: ReactNode }) {
           </nav>
           <div className="ops-sidebar-bottom">
             <span><span className="ops-live-dot" /> Your software. Your business.</span>
+            {/* oxlint-disable-next-line nextjs/no-html-link-for-pages -- ASP.NET Core Admin UI */}
             <a href="/admin-ui">
               System administration <ArrowUpRight size={14} />
             </a>
