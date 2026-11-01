@@ -2,7 +2,7 @@
 
 The application uses an ES256 JWT with build-date coverage. Start from README.md; PLAN.md describes the superseded feature-catalog design.
 
-Run `dotnet test MyApp.Tests -m:1`, `dotnet build MyApp.SampleApp`, and `npm run typecheck`, `npm run test:run`, `npm run build` in MyApp.Client. After DTO changes, build and restart the backend, then regenerate `lib/dtos.ts` from `/types/typescript?MakePropertiesOptional=true` before checking the client.
+Run `dotnet test MyApp.Tests -m:1`, `dotnet build MyApp.SampleApp`, and `npm run check` (format, lint, type check), `npm run test:run`, `npm run build` in MyApp.Client. After DTO changes, build and restart the backend: the `dtos` startup task regenerates `lib/dtos.ts` (keeping its `MakePropertiesOptional` header option) before you check the client.
 
 There is one OrmLite licensing baseline (`Migration1000`, 17 tables, no triggers), plus the EF Identity baseline. The template is unpublished: recreate disposable development databases instead of adding compatibility migrations. After release, never edit deployed migrations. Empty databases bootstrap at startup; `npm run migrate` in MyApp runs migrations explicitly. Always spell SQLite connection strings `DataSource=`, without a space.
 
