@@ -23,37 +23,49 @@ export default function Nav() {
   useEffect(() => setOpen(false), [pathname])
   useEffect(() => {
     if (!open) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [open])
 
-  const current = (href: string) => pathname === href || pathname.startsWith(href + '/') ? 'page' as const : undefined
+  const current = (href: string) => (pathname === href || pathname.startsWith(href + '/') ? ('page' as const) : undefined)
 
   return (
     <header className="studio-header">
       <div className="studio-nav">
         <Link href="/" className="studio-brand" aria-label="Acme Studio home">
-          <span className="studio-mark"><Command size={18}/></span>
-          acme<span className="brand-light">studio</span><span className="brand-dot"/>
+          <span className="studio-mark">
+            <Command size={18} />
+          </span>
+          acme<span className="brand-light">studio</span>
+          <span className="brand-dot" />
         </Link>
 
         <nav className="desktop-links" aria-label="Main">
           {links.map(([href, title]) => (
-            <Link key={href} href={href} aria-current={current(href)}>{title}</Link>
+            <Link key={href} href={href} aria-current={current(href)}>
+              {title}
+            </Link>
           ))}
         </nav>
 
         <div className="nav-actions">
-          <ThemeToggle/>
+          <ThemeToggle />
           {hasRole('Admin') && (
-            <Link href="/admin" className="desktop-only studio-button ghost" aria-current={current('/admin')}>Operations</Link>
+            <Link href="/admin" className="desktop-only studio-button ghost" aria-current={current('/admin')}>
+              Operations
+            </Link>
           )}
           {user && (
-            <button className="desktop-only studio-button ghost" onClick={() => signOut('/')}>Sign out</button>
+            <button className="desktop-only studio-button ghost" onClick={() => signOut('/')}>
+              Sign out
+            </button>
           )}
           <Link href={user ? '/account' : '/signin'} className="nav-account" aria-current={current('/account')}>
-            {user ? 'My licenses' : 'Sign in'}<ArrowUpRight size={14}/>
+            {user ? 'My licenses' : 'Sign in'}
+            <ArrowUpRight size={14} />
           </Link>
           <button
             className="mobile-toggle"
@@ -62,7 +74,7 @@ export default function Nav() {
             aria-expanded={open}
             aria-controls="mobile-menu"
           >
-            {open ? <X size={20}/> : <Menu size={20}/>}
+            {open ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
       </div>
@@ -70,12 +82,19 @@ export default function Nav() {
       {open && (
         <nav className="mobile-links" id="mobile-menu" aria-label="Mobile">
           {links.map(([href, title]) => (
-            <Link key={href} href={href} aria-current={current(href)}>{title}</Link>
+            <Link key={href} href={href} aria-current={current(href)}>
+              {title}
+            </Link>
           ))}
           <Link href={user ? '/account' : '/signin'} aria-current={current('/account')}>
-            {user ? 'My licenses' : 'Sign in'}<ArrowUpRight size={15}/>
+            {user ? 'My licenses' : 'Sign in'}
+            <ArrowUpRight size={15} />
           </Link>
-          {hasRole('Admin') && <Link href="/admin" aria-current={current('/admin')}>Operations</Link>}
+          {hasRole('Admin') && (
+            <Link href="/admin" aria-current={current('/admin')}>
+              Operations
+            </Link>
+          )}
           {user && <button onClick={() => signOut('/')}>Sign out</button>}
         </nav>
       )}

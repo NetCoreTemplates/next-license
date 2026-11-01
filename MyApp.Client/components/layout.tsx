@@ -1,5 +1,5 @@
-import Nav from "./nav"
-import Footer from "./footer"
+import Nav from './nav'
+import Footer from './footer'
 
 type Props = {
   children: React.ReactNode
@@ -8,10 +8,14 @@ type Props = {
 const Layout = ({ children }: Props) => {
   return (
     <>
-      <a className="skip-link" href="#main">Skip to content</a>
+      <a className="skip-link" href="#main">
+        Skip to content
+      </a>
       <Nav />
       <div className="studio-content">
-        <main id="main" tabIndex={-1}>{children}</main>
+        <main id="main" tabIndex={-1}>
+          {children}
+        </main>
       </div>
       <Footer />
     </>

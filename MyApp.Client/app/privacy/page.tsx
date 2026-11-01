@@ -19,27 +19,23 @@ export default function Privacy() {
         <div className="studio-prose" style={{ marginTop: 40 }}>
           <h2>The license file</h2>
           <p>
-            Anyone who receives your license file can read your name, organization, edition, seat count and update
-            entitlement. Paid feature verification happens entirely offline, which also means revocation cannot
-            remotely disable a file that has already been issued.
+            Anyone who receives your license file can read your name, organization, edition, seat count and update entitlement. Paid feature verification
+            happens entirely offline, which also means revocation cannot remotely disable a file that has already been issued.
           </p>
 
           <h2>Optional license refresh</h2>
           <p>
-            An application may request the latest license using its refresh key. The server does not store
-            installation IDs, device details or activation history. Refresh is optional; paid features work offline.
+            An application may request the latest license using its refresh key. The server does not store installation IDs, device details or activation
+            history. Refresh is optional; paid features work offline.
           </p>
 
           <h2>Retention</h2>
-          <p>
-            Account, order, invoice and agreement records support your purchase and the
-            operator&rsquo;s commercial recordkeeping.
-          </p>
+          <p>Account, order, invoice and agreement records support your purchase and the operator&rsquo;s commercial recordkeeping.</p>
 
           <h2>Before you launch this template</h2>
           <p>
-            This template requires the operator to publish a jurisdiction-specific retention and account-deletion
-            policy before going live. Replace this page with yours.
+            This template requires the operator to publish a jurisdiction-specific retention and account-deletion policy before going live. Replace this page
+            with yours.
           </p>
         </div>
       </div>

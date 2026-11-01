@@ -1,74 +1,101 @@
-"use client"
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import { Apple, Download as DownloadIcon, Monitor, Terminal } from "lucide-react"
-import { client } from "@/lib/gateway"
-import { GetGitHubDownloads, GitHubDownloadsResponse } from "@/lib/dtos"
-import { detectPlatform, downloadableBuilds, packageLabel, platformLabel } from "@/lib/software-downloads"
-import ReleaseNotes from "@/components/release-notes"
-import { Github } from "@/components/github-icon"
-import Layout from "@/components/layout"
-import { PageHeader, EmptyState, SkeletonCard, Alert, formatUtcDate } from "@/components/page-parts"
+'use client'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { Apple, Download as DownloadIcon, Monitor, Terminal } from 'lucide-react'
+import { client } from '@/lib/gateway'
+import { GetGitHubDownloads, GitHubDownloadsResponse } from '@/lib/dtos'
+import { detectPlatform, downloadableBuilds, packageLabel, platformLabel } from '@/lib/software-downloads'
+import ReleaseNotes from '@/components/release-notes'
+import { Github } from '@/components/github-icon'
+import Layout from '@/components/layout'
+import { PageHeader, EmptyState, SkeletonCard, Alert, formatUtcDate } from '@/components/page-parts'
 
 const platformIcon = (name?: string) => {
   const label = platformLabel(name)
-  return label === 'macOS' ? <Apple size={16}/> : label === 'Linux' ? <Terminal size={16}/> : label === 'Windows' ? <Monitor size={16}/> : <DownloadIcon size={16}/>
+  return label === 'macOS' ? (
+    <Apple size={16} />
+  ) : label === 'Linux' ? (
+    <Terminal size={16} />
+  ) : label === 'Windows' ? (
+    <Monitor size={16} />
+  ) : (
+    <DownloadIcon size={16} />
+  )
 }
 
 const megabytes = (bytes = 0) => `${(bytes / 1048576).toFixed(1)} MB`
 
 export default function Download() {
   const [data, setData] = useState<GitHubDownloadsResponse>()
-  const [error, setError] = useState("")
+  const [error, setError] = useState('')
   // Known only in the browser; resolved after mount so markup stays stable.
   const [platform, setPlatform] = useState<string>()
   useEffect(() => setPlatform(detectPlatform(navigator.userAgent)), [])
-  const latestStable = data?.results?.find(r => !r.prerelease)?.tag
+  const latestStable = data?.results?.find((r) => !r.prerelease)?.tag
 
   async function load() {
-    setError("")
+    setError('')
     setData(undefined)
     const api = await client.api(new GetGitHubDownloads())
     if (api.succeeded) setData(api.response)
-    else setError(api.error?.message ?? "Unable to load releases.")
+    else setError(api.error?.message ?? 'Unable to load releases.')
   }
 
-  useEffect(() => { void load() }, [])
+  useEffect(() => {
+    void load()
+  }, [])
 
   return (
     <Layout>
       <div className="studio-page wide">
         <PageHeader
           eyebrow="Made to be yours"
-          title={<>Your next great idea<br/>starts with a download.</>}
+          title={
+            <>
+              Your next great idea
+              <br />
+              starts with a download.
+            </>
+          }
           lead="Get the latest build for your platform. Start free, then unlock Pro with a perpetual license — your covered versions keep working offline."
-          action={<Link href="/pricing" className="studio-button secondary">See license options</Link>}
+          action={
+            <Link href="/pricing" className="studio-button secondary">
+              See license options
+            </Link>
+          }
         />
 
         <div style={{ marginTop: 40, display: 'grid', gap: 18 }}>
           {error && (
             <Alert tone="error" role="alert">
               {error}{' '}
-              <button onClick={() => void load()} className="ops-text-button">Try again</button>
+              <button onClick={() => void load()} className="ops-text-button">
+                Try again
+              </button>
             </Alert>
           )}
-          {!data && !error && <><SkeletonCard rows={4}/><SkeletonCard rows={3}/></>}
+          {!data && !error && (
+            <>
+              <SkeletonCard rows={4} />
+              <SkeletonCard rows={3} />
+            </>
+          )}
           {data?.results?.length === 0 && (
-            <EmptyState icon={<Github size={26}/>} title="Something good is on its way">
+            <EmptyState icon={<Github size={26} />} title="Something good is on its way">
               Downloads appear here as soon as the first release is published.
             </EmptyState>
           )}
-          {data?.results?.map(release => {
+          {data?.results?.map((release) => {
             const builds = downloadableBuilds(release.assets)
             const title = release.name || release.tag
             // Point people at their own platform's build of the newest stable release.
-            const recommend = release.tag === latestStable && platform
-              ? builds.find(a => platformLabel(a.name) === platform)
-              : undefined
+            const recommend = release.tag === latestStable && platform ? builds.find((a) => platformLabel(a.name) === platform) : undefined
             return (
               <article className="studio-card" key={release.tag}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-                  <span className="ops-integration-icon"><DownloadIcon size={20}/></span>
+                  <span className="ops-integration-icon">
+                    <DownloadIcon size={20} />
+                  </span>
                   <div style={{ flex: '1 1 220px', minWidth: 0 }}>
                     <h2 style={{ fontSize: 'var(--t-lg)' }}>{title}</h2>
                     <p className="fact" style={{ marginTop: 6, color: 'var(--ink-subtle)' }}>
@@ -84,7 +111,7 @@ export default function Download() {
 
                 {builds.length > 0 ? (
                   <div className="download-assets">
-                    {builds.map(asset => (
+                    {builds.map((asset) => (
                       <a className={`download-asset ${asset === recommend ? 'recommended' : ''}`} href={asset.url} key={asset.url}>
                         <span className="download-asset-icon">{platformIcon(asset.name)}</span>
                         <span className="download-asset-text">
@@ -92,10 +119,12 @@ export default function Download() {
                             {platformLabel(asset.name)}
                             <span>{packageLabel(asset.name)}</span>
                           </strong>
-                          <small className="fact">{megabytes(asset.size ?? 0)} · {asset.name}</small>
+                          <small className="fact">
+                            {megabytes(asset.size ?? 0)} · {asset.name}
+                          </small>
                         </span>
                         {asset === recommend && <span className="download-asset-tag">Recommended for {platform}</span>}
-                        <DownloadIcon size={16} className="download-asset-arrow"/>
+                        <DownloadIcon size={16} className="download-asset-arrow" />
                       </a>
                     ))}
                   </div>
@@ -110,7 +139,9 @@ export default function Download() {
         </div>
 
         <p style={{ marginTop: 32 }}>
-          <Link className="text-link" href="/changelog">Read the full changelog</Link>
+          <Link className="text-link" href="/changelog">
+            Read the full changelog
+          </Link>
         </p>
       </div>
     </Layout>

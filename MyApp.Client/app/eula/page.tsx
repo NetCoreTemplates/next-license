@@ -29,15 +29,25 @@ export default function Eula() {
         <PageHeader
           eyebrow="Legal"
           title="License agreement"
-          lead={agreement
-            ? <>The terms in force for new purchases. Version <span className="fact">{agreement.version}</span>.</>
-            : 'The terms in force for new purchases.'}
+          lead={
+            agreement ? (
+              <>
+                The terms in force for new purchases. Version <span className="fact">{agreement.version}</span>.
+              </>
+            ) : (
+              'The terms in force for new purchases.'
+            )
+          }
         />
         <div style={{ marginTop: 40 }}>
-          {loading && <SkeletonCard rows={6}/>}
-          {error && <Alert tone="error" role="alert">{error}</Alert>}
+          {loading && <SkeletonCard rows={6} />}
+          {error && (
+            <Alert tone="error" role="alert">
+              {error}
+            </Alert>
+          )}
           {!loading && !error && !agreement && (
-            <EmptyState icon={<FileText size={26}/>} title="No agreement has been published">
+            <EmptyState icon={<FileText size={26} />} title="No agreement has been published">
               Purchases stay closed until the operator publishes license terms.
             </EmptyState>
           )}

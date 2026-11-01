@@ -1,6 +1,6 @@
 {
-  "type": "module",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "dtos": "npx get-dtos ts",

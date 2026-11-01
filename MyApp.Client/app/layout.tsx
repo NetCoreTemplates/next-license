@@ -1,4 +1,4 @@
-import "../styles/index.css"
+import '../styles/index.css'
 import type { Metadata } from 'next'
 import { Familjen_Grotesk, Instrument_Sans, JetBrains_Mono } from 'next/font/google'
 import Providers from './providers'
@@ -36,11 +36,7 @@ export const metadata: Metadata = {
   manifest: '/favicon/site.webmanifest',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`h-full ${display.variable} ${sans.variable} ${mono.variable}`} suppressHydrationWarning>
       <head>

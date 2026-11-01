@@ -1,34 +1,33 @@
-import { dateFmt, toDate, toDateFmt } from "@servicestack/client"
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { dateFmt, toDate, toDateFmt } from '@servicestack/client'
+import { type ClassValue, clsx } from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
 const formatter = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+  style: 'currency',
+  currency: 'USD',
 })
-export const formatCurrency = (n?:number) => n ? formatter.format(n) : ''
-export const formatDate = (s?:string) => s ? toDateFmt(s) : ''
+export const formatCurrency = (n?: number) => (n ? formatter.format(n) : '')
+export const formatDate = (s?: string) => (s ? toDateFmt(s) : '')
 
 // Read a text field, missing or file fields are '' (String(form.get()) would give "null")
 export function formText(form: FormData, name: string) {
-    const value = form.get(name)
-    return typeof value === 'string' ? value : ''
+  const value = form.get(name)
+  return typeof value === 'string' ? value : ''
 }
 
-export const dateInputFormat = (d:Date) => dateFmt(d).replace(/\//g,'-')
+export const dateInputFormat = (d: Date) => dateFmt(d).replace(/\//g, '-')
 
-export function sanitizeForUi(dto:any) {
-    if (!dto) return {}
-    Object.keys(dto).forEach(key => {
-        let value = dto[key]
-        if (typeof value == 'string') {
-            if (value.startsWith('/Date'))
-                dto[key] = dateInputFormat(toDate(value))
-        }
-    })
-    return dto
+export function sanitizeForUi(dto: any) {
+  if (!dto) return {}
+  Object.keys(dto).forEach((key) => {
+    let value = dto[key]
+    if (typeof value == 'string') {
+      if (value.startsWith('/Date')) dto[key] = dateInputFormat(toDate(value))
+    }
+  })
+  return dto
 }
