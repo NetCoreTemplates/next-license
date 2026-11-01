@@ -33,7 +33,7 @@ public class UpdateClientTests
             SemanticVersion.Parse("1.0.0"), SemanticVersion.Parse("1.0.0"), installation);
         Assert.That(offered?.Version, Is.EqualTo("2.0.0"));
         using var staleHttp = new HttpClient(new BytesHandler(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(new { manifest = Feed(100, now.AddHours(-23)) })));
-        Assert.ThrowsAsync<CryptographicException>(() => new UpdateClient(staleHttp, roots, new FixedClock(now.AddHours(2))).Check(
+        await Assert.ThrowsAsync<CryptographicException>(() => new UpdateClient(staleHttp, roots, new FixedClock(now.AddHours(2))).Check(
             new Uri("https://example.invalid/updates/feed"), "acme-studio", "linux-x64", "Stable", SemanticVersion.Parse("1.0.0"), SemanticVersion.Parse("1.0.0"), installation));
         Assert.That(UpdateManifest.Verify(Feed(0), roots).OfferedTo(installation), Is.False);
         var update = UpdateManifest.Verify(Feed(100), roots);
@@ -49,12 +49,12 @@ public class UpdateClientTests
         {
             await client.Download(update, path, 1000);
             Assert.That(await File.ReadAllBytesAsync(path), Is.EqualTo(bytes));
-            Assert.ThrowsAsync<IOException>(() => client.Download(update, path, 1000));
+            await Assert.ThrowsAsync<IOException>(() => client.Download(update, path, 1000));
             Assert.That(await File.ReadAllBytesAsync(path), Is.EqualTo(bytes), "An existing host file must not be deleted.");
         }
         finally { File.Delete(path); }
         using var corruptHttp = new HttpClient(new BytesHandler(Encoding.UTF8.GetBytes("corrupt")));
-        Assert.ThrowsAsync<CryptographicException>(() => new UpdateClient(corruptHttp, roots).Download(update, path, 1000));
+        await Assert.ThrowsAsync<CryptographicException>(() => new UpdateClient(corruptHttp, roots).Download(update, path, 1000));
         Assert.That(File.Exists(path), Is.False);
     }
     private sealed class FixedClock(DateTime now) : TimeProvider

@@ -16,7 +16,7 @@ namespace MyApp.Tests;
 public class SoftwareSetupTests
 {
     [Test]
-    public void Changing_price_removes_approval_and_old_Stripe_mapping_without_changing_order_evidence()
+    public async Task Changing_price_removes_approval_and_old_Stripe_mapping_without_changing_order_evidence()
     {
         var factory = DatabaseTestRun.CreateFactory();
         using var db = factory.OpenDbConnection();
@@ -35,7 +35,7 @@ public class SoftwareSetupTests
         Assert.That(changed.IsActive, Is.False);
         Assert.That(changed.StripePriceId, Is.Empty);
         Assert.That(db.Single<OrderLine>(x => x.OrderId == order).UnitAmountCents, Is.EqualTo(9900));
-        Assert.ThrowsAsync<HttpError>(() => service.Post(new ApproveSoftwarePrice { Sku = changed.Sku, Approved = true }));
+        await Assert.ThrowsAsync<HttpError>(() => service.Post(new ApproveSoftwarePrice { Sku = changed.Sku, Approved = true }));
         Assert.Throws<HttpError>(() => service.Post(new SetSoftwarePrice { Sku = changed.Sku, UnitAmountCents = 0 }));
     }
     [Test]
