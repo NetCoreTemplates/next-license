@@ -35,7 +35,9 @@ const enablePro = result.valid;
 
 ## Tests
 
-`dotnet test MyApp.Tests` includes .NET-to-Node JWT compatibility and payment/renewal/reissue tests. Node is required. `npm run build` and `npm run test:run` in MyApp.Client validate the storefront.
+`dotnet test MyApp.Tests` includes .NET-to-Node JWT compatibility and payment/renewal/reissue tests. Node is required. `npm run check` (format, lint, type check), `npm run test:run` and `npm run build` in MyApp.Client validate the storefront.
+
+Next.js runs the storefront's dev server and static export. Formatting, linting, type checking and tests use the [Vite+](https://viteplus.dev) toolchain (Oxfmt, Oxlint with TypeScript 7, Vitest), configured in `MyApp.Client/vite.config.ts`. The local `vite-plus` devDependency runs the npm scripts, so a global `vp` install (`curl -fsSL https://vite.plus | bash`) is optional. Open `MyApp.code-workspace` in VS Code for format-on-save and lint. `lib/dtos.ts` is regenerated whenever the .NET App starts, so `npm run dtos` is typically never needed.
 
 ## Database scope
 

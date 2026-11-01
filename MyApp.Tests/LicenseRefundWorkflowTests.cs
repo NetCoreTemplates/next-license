@@ -32,10 +32,10 @@ public class LicenseRefundWorkflowTests
         Assert.That(stripe.Creates, Is.EqualTo(1));
         Assert.That(db.Count<LicenseRefund>(), Is.EqualTo(1));
         request.AmountCents = 50;
-        Assert.ThrowsAsync<HttpError>(() => service.Post(request));
+        await Assert.ThrowsAsync<HttpError>(() => service.Post(request));
         var uncertain = Guid.NewGuid();
         db.Insert(new LicenseRefundRequest { Id = uncertain, OrderId = id, AmountCents = 40, Reason = "Uncertain", CreatedAtUtc = DateTime.UtcNow.AddDays(-2) });
-        Assert.ThrowsAsync<HttpError>(() => service.Post(new RefundLicenseOrder { Id = id, RequestId = uncertain, AmountCents = 40, Reason = "Uncertain" }));
+        await Assert.ThrowsAsync<HttpError>(() => service.Post(new RefundLicenseOrder { Id = id, RequestId = uncertain, AmountCents = 40, Reason = "Uncertain" }));
         Assert.That(stripe.Creates, Is.EqualTo(1));
     }
     private sealed class RefundGateway : ILicenseRefundGateway

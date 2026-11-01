@@ -1,4 +1,4 @@
-import SoftwareOperations from "@/components/software-operations";
+import SoftwareOperations from '@/components/software-operations'
 export default function Page() {
-  return <SoftwareOperations section="settings" />;
+  return <SoftwareOperations section="settings" />
 }

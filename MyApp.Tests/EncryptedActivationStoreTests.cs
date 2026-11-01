@@ -17,10 +17,10 @@ public class EncryptedActivationStoreTests
             using(var restored=new EncryptedActivationStore(directory,key))
             { Assert.That((await restored.Load(default)).InstallationId,Is.EqualTo(state.InstallationId)); Assert.That(await restored.LoadLicense(),Is.EqualTo("signed-sensitive-license")); }
             using(var wrong=new EncryptedActivationStore(directory,RandomNumberGenerator.GetBytes(32)))
-                Assert.ThrowsAsync<AuthenticationTagMismatchException>(()=>wrong.LoadLicense());
+                await Assert.ThrowsAsync<AuthenticationTagMismatchException>(()=>wrong.LoadLicense());
             var bytes=await File.ReadAllBytesAsync(Path.Combine(directory,"license.enc")); bytes[^1]^=1; await File.WriteAllBytesAsync(Path.Combine(directory,"license.enc"),bytes);
             using var tampered=new EncryptedActivationStore(directory,key);
-            Assert.ThrowsAsync<AuthenticationTagMismatchException>(()=>tampered.LoadLicense());
+            await Assert.ThrowsAsync<AuthenticationTagMismatchException>(()=>tampered.LoadLicense());
         }
         finally { Directory.Delete(directory,true); CryptographicOperations.ZeroMemory(key); }
     }

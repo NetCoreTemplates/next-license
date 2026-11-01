@@ -15,14 +15,16 @@ export default function ThemeToggle() {
   function toggle() {
     const next = !document.documentElement.classList.contains('dark')
     document.documentElement.classList.toggle('dark', next)
-    try { localStorage.setItem('color-scheme', next ? 'dark' : 'light') } catch {}
+    try {
+      localStorage.setItem('color-scheme', next ? 'dark' : 'light')
+    } catch {}
     setDark(next)
   }
 
   const label = dark ? 'Switch to light theme' : 'Switch to dark theme'
   return (
     <button type="button" className="theme-toggle" onClick={toggle} aria-label={label} title={label}>
-      {dark === undefined ? null : dark ? <Sun size={17}/> : <Moon size={17}/>}
+      {dark === undefined ? null : dark ? <Sun size={17} /> : <Moon size={17} />}
     </button>
   )
 }

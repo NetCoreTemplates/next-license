@@ -31,13 +31,13 @@ public class LicenseTransferTests
         request.Items[Keywords.Session]=session;
         using var service=new LicenseTransferServices(users) { Request=request };
         var transfer=(LicenseTransfer)await service.Post(new TransferLicense { Id=id,RecipientEmail="recipient@example.invalid" });
-        Assert.ThrowsAsync<HttpError>(()=>service.Post(new AcceptLicenseTransfer { Id=transfer.Id }));
+        await Assert.ThrowsAsync<HttpError>(()=>service.Post(new AcceptLicenseTransfer { Id=transfer.Id }));
         session.UserAuthId="recipient";
         await service.Post(new AcceptLicenseTransfer { Id=transfer.Id });
         Assert.That(db.SingleById<SoftwareLicense>(id).UserId,Is.EqualTo("recipient"));
         Assert.That(db.SingleById<SoftwareLicense>(id).LicenseeName,Is.EqualTo("Original Buyer"));
         Assert.That(db.SingleById<LicenseOrder>(orderId).UserId,Is.EqualTo("buyer"));
-        Assert.ThrowsAsync<HttpError>(()=>service.Post(new AcceptLicenseTransfer { Id=transfer.Id }));
+        await Assert.ThrowsAsync<HttpError>(()=>service.Post(new AcceptLicenseTransfer { Id=transfer.Id }));
         session.UserAuthId="buyer";
         Assert.Throws<HttpError>(()=>service.Post(new CancelLicenseTransfer { Id=transfer.Id }));
     }

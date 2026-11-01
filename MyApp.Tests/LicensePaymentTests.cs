@@ -59,7 +59,7 @@ public class LicensePaymentTests
         var recovery = new LicenseCheckoutRecovery(reader, fulfillment);
         reader.CurrentPayment.AmountReceived = expectedTotal-1;
         if (!complimentary) {
-        Assert.ThrowsAsync<InvalidOperationException>(() => recovery.Reconcile(db, order.Id));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => recovery.Reconcile(db, order.Id));
         Assert.That(db.Count<SoftwareLicense>(), Is.Zero);
         reader.CurrentPayment.AmountReceived = expectedTotal;
         session.PaymentStatus = "unpaid"; session.Status = "complete";

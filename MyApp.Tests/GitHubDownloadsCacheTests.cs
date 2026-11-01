@@ -19,7 +19,7 @@ public class GitHubDownloadsCacheTests
             var restarted = new GitHubDownloadsCache(directory);
             var result = await restarted.Get("acme/app", () => Task.FromException<string>(new HttpRequestException()));
             Assert.That(result.Results.Single().Tag, Is.EqualTo("v1"));
-            Assert.ThrowsAsync<HttpError>(() => restarted.Get("other/app", () => Task.FromException<string>(new HttpRequestException())));
+            await Assert.ThrowsAsync<HttpError>(() => restarted.Get("other/app", () => Task.FromException<string>(new HttpRequestException())));
             await restarted.Get("acme/app", () => Task.FromResult("invalid"));
             result = await new GitHubDownloadsCache(directory).Get("acme/app", () => Task.FromException<string>(new TaskCanceledException()));
             Assert.That(result.Results.Single().Tag, Is.EqualTo("v1"));
@@ -43,7 +43,7 @@ public class GitHubDownloadsCacheTests
         Assert.That(live.Results.Single().Tag, Is.EqualTo("v2"));
         var latest = await cache.Get("acme/app", () => Task.FromException<string>(new HttpRequestException()));
         Assert.That(latest.Results.Single().Tag, Is.EqualTo("v2"));
-        Assert.ThrowsAsync<HttpError>(() => cache.Get("other/app", () => Task.FromException<string>(new HttpRequestException())));
+        await Assert.ThrowsAsync<HttpError>(() => cache.Get("other/app", () => Task.FromException<string>(new HttpRequestException())));
     }
 
     [Test]
